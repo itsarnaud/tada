@@ -1,0 +1,98 @@
+# ==================================================
+# .GITIGNORE - Projet Electio-Analytics
+# ==================================================
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Data Files
+data/processed/*.csv
+data/final/*.db
+data/final/*.sqlite
+data/final/*.parquet
+
+# Keep structure but ignore content
+!data/processed/.gitkeep
+!data/final/.gitkeep
+
+# Models
+models/*.pkl
+models/*.h5
+models/*.joblib
+
+# Visualisations générées
+visualisations/*.png
+visualisations/*.jpg
+visualisations/*.pdf
+visualisations/*.html
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# Spark
+spark-warehouse/
+metastore_db/
+derby.log
+
+# Environment variables
+.env
+.env.local
+
+# Documentation temporaire
+documentation/*.tmp.md
+
+# Backup files
+*.bak
+*.backup
+
+# Excel temporary
+~$*.xlsx
+~$*.xls
