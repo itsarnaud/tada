@@ -136,3 +136,4 @@ def remove_outliers(df: DataFrame, column: str, lower_percentile=0.01, upper_per
     """
     bounds = df.approxQuantile(column, [lower_percentile, upper_percentile], 0.01)
     return df.filter((col(column) >= bounds[0]) & (col(column) <= bounds[1]))
+

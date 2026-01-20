@@ -11,7 +11,7 @@ from transform import (
     handle_missing_values,
     normalize_commune_names,
     cast_columns_types,
-    filter_department
+    filter_department,
 )
 from load import save_to_csv, save_to_parquet, create_summary_report
 from pyspark.sql.types import IntegerType, DoubleType, StringType
@@ -183,7 +183,7 @@ def process_elections_data():
     return df_elections
 
 
-def process_population_data():
+def process_population_age_data():
     """
     Traite les données de population par tranche d'âge
     Garde uniquement 2016 et 2022, puis interpole pour 2020
@@ -614,45 +614,326 @@ def process_sociopro_data():
     return df_socio
 
 
-def process_communes_data():
+def process_crimes_delits_herault():
     """
-    Traite les données de référence des communes
+    Charge le fichier parquet des crimes et délits, filtre pour l'Hérault
+    et enregistre en CSV
+    
+    Returns:
+        str: Chemin du fichier CSV créé
     """
-    print("\n🗺️  Traitement des données des communes...")
+    print("\nTraitement des donnees crimes et delits - Herault")
+    print("=" * 60)
     
-    communes_file = os.path.join(RAW_DATA_PATH, 'communes-france-2025 (1).csv')
+    # Chemin du fichier parquet
+    parquet_file = os.path.join(RAW_DATA_PATH, 
+                                'donnee-comm-data.gouv-parquet-2024-geographie2025-produit-le2025-06-04.parquet')
     
-    df_communes = read_csv(spark, communes_file, sep=',')
-    print(f"  → {df_communes.count()} lignes chargées")
+    if not os.path.exists(parquet_file):
+        print(f"Erreur: Fichier non trouve: {parquet_file}")
+        return None
     
-    df_communes = clean_column_names(df_communes)
-    df_communes = remove_duplicates(df_communes)
+    # Charger le fichier parquet
+    print(f"Chargement du fichier parquet...")
+    df = pd.read_parquet(parquet_file)
+    print(f"  -> {len(df):,} lignes chargees")
     
-    # Filtrer pour l'Hérault (département 34)
-    if 'code_departement' in df_communes.columns:
-        df_communes = df_communes.filter(df_communes.code_departement == '34')
-    elif 'dep' in df_communes.columns:
-        df_communes = df_communes.filter(df_communes.dep == '34')
+    # Filtrer pour l'Hérault (codes communes commençant par '34')
+    print(f"\nFiltrage pour l'Herault (departement 34)...")
+    df_herault = df[df['CODGEO_2025'].str.startswith('34', na=False)].copy()
+    print(f"  -> {len(df_herault):,} lignes pour l'Herault")
     
-    print(f"  → {df_communes.count()} communes dans l'Hérault")
+    # Définir les indicateurs de crimes et délits
+    indicateurs_crimes_delits = [
+        'Violences physiques intrafamiliales',
+        'Violences physiques hors cadre familial',
+        'Violences sexuelles',
+        'Vols avec armes',
+        'Vols violents sans arme',
+        'Vols sans violence contre des personnes',
+        'Cambriolages de logement',
+        'Vols de véhicule',
+        'Vols dans les véhicules',
+        "Vols d'accessoires sur véhicules",
+        'Destructions et dégradations volontaires'
+    ]
     
-    output_path = os.path.join(PROCESSED_DATA_PATH, 'communes_herault_clean.csv')
-    df_communes.toPandas().to_csv(output_path, index=False, encoding='utf-8')
+    # Filtrer pour les crimes et délits
+    print(f"\nFiltrage pour les crimes et delits...")
+    df_crimes = df_herault[df_herault['indicateur'].isin(indicateurs_crimes_delits)].copy()
+    print(f"  -> {len(df_crimes):,} lignes de crimes et delits")
+    print(f"\n  Indicateurs inclus:")
+    for ind in indicateurs_crimes_delits:
+        count = len(df_crimes[df_crimes['indicateur'] == ind])
+        if count > 0:
+            print(f"    - {ind}: {count:,} lignes")
     
-    print(f"  ✓ Données des communes traitées et sauvegardées")
-    return df_communes
+    # Sauvegarder en CSV
+    output_file = os.path.join(PROCESSED_DATA_PATH, 'crimes_delits_clean.csv')
+    print(f"\nSauvegarde en CSV...")
+    df_crimes.to_csv(output_file, index=False, encoding='utf-8-sig')
+    print(f"  -> Fichier sauvegarde: {output_file}")
+    
+    # Afficher des statistiques
+    print(f"\nStatistiques du dataset:")
+    print(f"  - Nombre de communes: {df_crimes['CODGEO_2025'].nunique()}")
+    print(f"  - Annees disponibles: {sorted(df_crimes['annee'].unique())}")
+    print(f"  - Nombre d'indicateurs: {df_crimes['indicateur'].nunique()}")
+    print(f"  - Colonnes: {len(df_crimes.columns)}")
+    
+    print("\n" + "=" * 60)
+    print("Traitement termine avec succes!")
+    
+    return output_file
+
+
+def process_revenus_fiscaux_data():
+    """
+    Traite les données des revenus des foyers fiscaux de l'Hérault
+    Calcule le taux d'imposition et l'impôt moyen par foyer imposé
+    
+    Indicateurs calculés:
+    - Taux d'imposition = (Nombre de foyers imposés / Nombre de foyers fiscaux) × 100
+    - Impôt moyen par foyer imposé = Impôt net total / Nombre de foyers imposés
+    """
+    print("\n💰 Traitement des données des revenus fiscaux...")
+    
+    revenus_file = os.path.join(RAW_DATA_PATH, 'revenus-des-foyers-fiscaux-herault.csv')
+    
+    # Extraction
+    df_revenus = read_csv(spark, revenus_file, sep=';')
+    print(f"  → {df_revenus.count()} lignes chargées")
+    
+    # Transformation
+    df_revenus = clean_column_names(df_revenus)
+    df_revenus = remove_duplicates(df_revenus)
+    
+    # Convertir en Pandas pour faciliter le traitement
+    df_pandas = df_revenus.toPandas()
+    
+    print(f"  → Colonnes disponibles: {', '.join(df_pandas.columns[:10])}...")
+    
+    # Identifier les colonnes importantes
+    code_commune_col = None
+    nom_commune_col = None
+    nb_foyers_col = None
+    nb_foyers_imposes_col = None
+    impot_total_col = None
+    
+    for col in df_pandas.columns:
+        col_lower = col.lower()
+        if 'code' in col_lower and 'commune' in col_lower:
+            code_commune_col = col
+        elif 'libelle' in col_lower and 'commune' in col_lower:
+            nom_commune_col = col
+        elif 'nombre_de_foyers_fiscaux_imposes' in col_lower:
+            nb_foyers_imposes_col = col
+        elif 'nombre_de_foyers_fiscaux' in col_lower and 'imposes' not in col_lower:
+            nb_foyers_col = col
+        elif 'impot_net' in col_lower and 'total' in col_lower:
+            impot_total_col = col
+    
+    print(f"  → Colonnes identifiées:")
+    print(f"     - Code commune: {code_commune_col}")
+    print(f"     - Nom commune: {nom_commune_col}")
+    print(f"     - Nombre de foyers fiscaux: {nb_foyers_col}")
+    print(f"     - Nombre de foyers imposés: {nb_foyers_imposes_col}")
+    print(f"     - Impôt net total: {impot_total_col}")
+    
+    if code_commune_col and nom_commune_col and nb_foyers_col and nb_foyers_imposes_col and impot_total_col:
+        # Sélectionner et renommer les colonnes
+        df_result = df_pandas[[code_commune_col, nom_commune_col, nb_foyers_col, nb_foyers_imposes_col, impot_total_col]].copy()
+        
+        df_result.columns = ['code_commune', 'libelle_commune', 'nombre_foyers_fiscaux', 'nombre_foyers_imposes', 'impot_net_total']
+        
+        # Convertir en numérique
+        print(f"  → Conversion des colonnes numériques...")
+        df_result['nombre_foyers_fiscaux'] = pd.to_numeric(df_result['nombre_foyers_fiscaux'], errors='coerce')
+        df_result['nombre_foyers_imposes'] = pd.to_numeric(df_result['nombre_foyers_imposes'], errors='coerce')
+        df_result['impot_net_total'] = pd.to_numeric(df_result['impot_net_total'], errors='coerce')
+        
+        # Supprimer les lignes avec des valeurs manquantes
+        initial_rows = len(df_result)
+        df_result = df_result.dropna()
+        print(f"  → {initial_rows - len(df_result)} lignes avec valeurs manquantes supprimées")
+        
+        # Filtrer les valeurs aberrantes
+        df_result = df_result[
+            (df_result['nombre_foyers_fiscaux'] > 0) & 
+            (df_result['nombre_foyers_imposes'] >= 0) &
+            (df_result['impot_net_total'] >= 0)
+        ]
+        print(f"  → {len(df_result)} lignes après filtrage")
+        
+        # Calculer le taux de foyers imposables (en %)
+        print(f"\n  📊 Calcul des indicateurs...")
+        print(f"     - Taux de foyers imposables = (Nombre de foyers imposés / Nombre de foyers fiscaux) × 100")
+        df_result['taux_foyers_imposables'] = (df_result['nombre_foyers_imposes'] / df_result['nombre_foyers_fiscaux'] * 100).round(2)
+        
+        # Calculer l'impôt moyen par foyer imposé (en milliers d'euros)
+        print(f"     - Impôt moyen par foyer imposé = (Impôt net total / Nombre de foyers imposés) × 1000")
+        df_result['impot_moyen_foyer_impose'] = (
+            (df_result['impot_net_total'] / df_result['nombre_foyers_imposes']) * 1000
+        ).fillna(0).round(2)
+        
+        # Normaliser les noms de communes
+        df_result['libelle_commune'] = df_result['libelle_commune'].str.upper().str.strip()
+        
+        # Garder uniquement les colonnes demandées
+        df_result = df_result[['code_commune', 'libelle_commune', 'taux_foyers_imposables', 'impot_moyen_foyer_impose']]
+        
+        # Afficher un aperçu
+        print(f"\n  📋 Aperçu des données (premières communes):")
+        print(df_result.head(10).to_string(index=False))
+        
+        # Afficher des statistiques
+        print(f"\n  📈 Statistiques descriptives:")
+        print(f"     - Nombre de communes: {len(df_result)}")
+        print(f"     - Taux de foyers imposables:")
+        print(f"        • Moyenne: {df_result['taux_foyers_imposables'].mean():.2f}%")
+        print(f"        • Médiane: {df_result['taux_foyers_imposables'].median():.2f}%")
+        print(f"        • Min: {df_result['taux_foyers_imposables'].min():.2f}%")
+        print(f"        • Max: {df_result['taux_foyers_imposables'].max():.2f}%")
+        print(f"     - Impôt moyen par foyer imposé:")
+        print(f"        • Moyenne: {df_result['impot_moyen_foyer_impose'].mean():.2f}k€")
+        print(f"        • Médiane: {df_result['impot_moyen_foyer_impose'].median():.2f}k€")
+        print(f"        • Min: {df_result['impot_moyen_foyer_impose'].min():.2f}k€")
+        print(f"        • Max: {df_result['impot_moyen_foyer_impose'].max():.2f}k€")
+        
+        # Sauvegarder
+        output_path = os.path.join(PROCESSED_DATA_PATH, 'revenus_clean.csv')
+        df_result.to_csv(output_path, index=False, encoding='utf-8')
+        
+        print(f"\n  ✓ Données des revenus fiscaux traitées et sauvegardées")
+        print(f"  → {output_path}")
+        print(f"  → Colonnes finales: {', '.join(df_result.columns)}")
+        
+        # Retourner en Spark DataFrame
+        return spark.createDataFrame(df_result)
+    else:
+        print(f"  ⚠️ Colonnes manquantes, sauvegarde sans traitement")
+        output_path = os.path.join(PROCESSED_DATA_PATH, 'revenus_clean.csv')
+        df_pandas.to_csv(output_path, index=False, encoding='utf-8')
+        return df_revenus
+
+
+def process_rsa_data():
+    """
+    Traite les données RSA (Revenu de Solidarité Active)
+    Filtre uniquement les communes de l'Hérault (code commence par 34)
+    et garde le nombre de personnes bénéficiaires
+    """
+    print("\n🤝 Traitement des données RSA...")
+    
+    rsa_file = os.path.join(RAW_DATA_PATH, 'rsa_touche.csv')
+    
+    # Extraction
+    df_rsa = read_csv(spark, rsa_file, sep=';')
+    print(f"  → {df_rsa.count()} lignes chargées (toutes régions)")
+    
+    # Transformation
+    df_rsa = clean_column_names(df_rsa)
+    df_rsa = remove_duplicates(df_rsa)
+    
+    # Convertir en Pandas pour faciliter le traitement
+    df_pandas = df_rsa.toPandas()
+    
+    print(f"  → Colonnes disponibles: {', '.join(df_pandas.columns)}")
+    
+    # Identifier les colonnes importantes
+    code_commune_col = None
+    nom_commune_col = None
+    nb_personnes_col = None
+    
+    for col in df_pandas.columns:
+        col_lower = col.lower()
+        if 'numero' in col_lower and 'commune' in col_lower:
+            code_commune_col = col
+        elif 'nom' in col_lower and 'commune' in col_lower:
+            nom_commune_col = col
+        elif 'nombre' in col_lower and 'personnes' in col_lower and 'rsa' in col_lower:
+            nb_personnes_col = col
+    
+    print(f"  → Colonnes identifiées:")
+    print(f"     - Code commune: {code_commune_col}")
+    print(f"     - Nom commune: {nom_commune_col}")
+    print(f"     - Nombre personnes RSA: {nb_personnes_col}")
+    
+    if code_commune_col and nom_commune_col and nb_personnes_col:
+        # Filtrer uniquement les communes de l'Hérault (code commence par 34)
+        print(f"  → Filtrage des communes de l'Hérault (code commence par 34)...")
+        df_pandas[code_commune_col] = df_pandas[code_commune_col].astype(str)
+        df_herault = df_pandas[df_pandas[code_commune_col].str.startswith('34')].copy()
+        
+        print(f"  → {len(df_herault)} lignes pour l'Hérault (sur {len(df_pandas)} total)")
+        
+        # Sélectionner et renommer les colonnes
+        df_result = df_herault[[code_commune_col, nom_commune_col, nb_personnes_col]].copy()
+        df_result.columns = ['code_commune', 'nom_commune', 'Nombre de personne RSA']
+        
+        # Convertir le nombre de personnes en numérique
+        df_result['Nombre de personne RSA'] = pd.to_numeric(df_result['Nombre de personne RSA'], errors='coerce').fillna(0).astype(int)
+        
+        # Supprimer les lignes avec nom de commune vide
+        df_result = df_result[df_result['nom_commune'].notna() & (df_result['nom_commune'] != '')]
+        
+        # Normaliser les noms de communes
+        df_result['nom_commune'] = df_result['nom_commune'].str.upper().str.strip()
+        
+        # Agréger par commune (au cas où il y aurait plusieurs lignes par commune)
+        print(f"  → Agrégation par commune...")
+        df_result = df_result.groupby(['code_commune', 'nom_commune'], as_index=False)['Nombre de personne RSA'].sum()
+        
+        print(f"  → {len(df_result)} communes de l'Hérault après agrégation")
+        
+        # Afficher un aperçu
+        print(f"\n  📋 Aperçu des données (premières communes):")
+        print(df_result.head(10).to_string(index=False))
+        
+        # Afficher des statistiques
+        print(f"\n  📈 Statistiques descriptives:")
+        print(f"     - Nombre de communes: {len(df_result)}")
+        print(f"     - Total de personnes au RSA: {df_result['Nombre de personne RSA'].sum():,}")
+        print(f"     - Moyenne par commune: {df_result['Nombre de personne RSA'].mean():.1f}")
+        print(f"     - Médiane: {df_result['Nombre de personne RSA'].median():.0f}")
+        print(f"     - Min: {df_result['Nombre de personne RSA'].min()}")
+        print(f"     - Max: {df_result['Nombre de personne RSA'].max()}")
+        
+        # Sauvegarder
+        output_path = os.path.join(PROCESSED_DATA_PATH, 'rsa_clean.csv')
+        df_result.to_csv(output_path, index=False, encoding='utf-8')
+        
+        print(f"\n  ✓ Données RSA traitées et sauvegardées")
+        print(f"  → {output_path}")
+        print(f"  → Colonnes finales: {', '.join(df_result.columns)}")
+        
+        # Retourner en Spark DataFrame
+        return spark.createDataFrame(df_result)
+    else:
+        print(f"  ⚠️ Colonnes manquantes, sauvegarde sans traitement")
+        output_path = os.path.join(PROCESSED_DATA_PATH, 'rsa_clean.csv')
+        df_pandas.to_csv(output_path, index=False, encoding='utf-8')
+        return df_rsa
 
 
 if __name__ == "__main__":
     try:
         # Exécuter tous les traitements
         df_elections = process_elections_data()
-        df_population = process_population_data()
+        df_population = process_population_age_data()
         df_education = process_education_data()
         df_employment = process_employment_data()
         df_sociopro = process_sociopro_data()
         #df_communes = process_communes_data()
         
+        # Traiter les crimes et délits
+        #crimes_csv = process_crimes_delits_herault()
+        
+        # Traiter les revenus fiscaux
+        df_revenus = process_revenus_fiscaux_data()
+        # Traiter les données RSA
+        df_rsa = process_rsa_data()
+
         print("\n" + "=" * 60)
         print("✅ Pipeline ETL terminé avec succès!")
         print(f"📁 Données traitées disponibles dans: {PROCESSED_DATA_PATH}")
