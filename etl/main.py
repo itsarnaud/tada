@@ -616,13 +616,13 @@ def process_sociopro_data():
 
 def process_crimes_delits_herault():
     """
-    Charge le fichier parquet des crimes et délits, filtre pour l'Hérault
-    et enregistre en CSV
+    Charge le fichier parquet des crimes et délits, filtre pour l'Hérault et l'année 2019
+    Agrège par commune: somme des nombres de délits et moyenne du taux pour mille
     
     Returns:
         str: Chemin du fichier CSV créé
     """
-    print("\nTraitement des donnees crimes et delits - Herault")
+    print("\n🚨 Traitement des données crimes et délits - Hérault 2019")
     print("=" * 60)
     
     # Chemin du fichier parquet
@@ -636,12 +636,21 @@ def process_crimes_delits_herault():
     # Charger le fichier parquet
     print(f"Chargement du fichier parquet...")
     df = pd.read_parquet(parquet_file)
-    print(f"  -> {len(df):,} lignes chargees")
+    print(f"  → {len(df):,} lignes chargées")
     
     # Filtrer pour l'Hérault (codes communes commençant par '34')
-    print(f"\nFiltrage pour l'Herault (departement 34)...")
+    print(f"\nFiltrage pour l'Hérault (département 34)...")
     df_herault = df[df['CODGEO_2025'].str.startswith('34', na=False)].copy()
-    print(f"  -> {len(df_herault):,} lignes pour l'Herault")
+    print(f"  → {len(df_herault):,} lignes pour l'Hérault")
+    
+    # Filtrer pour l'année 2019
+    print(f"\nFiltrage pour l'année 2019...")
+    df_2019 = df_herault[df_herault['annee'] == 2019].copy()
+    print(f"  → {len(df_2019):,} lignes pour 2019")
+    
+    if len(df_2019) == 0:
+        print(f"  ⚠️ Aucune donnée pour 2019, années disponibles: {sorted(df_herault['annee'].unique())}")
+        return None
     
     # Définir les indicateurs de crimes et délits
     indicateurs_crimes_delits = [
@@ -659,30 +668,68 @@ def process_crimes_delits_herault():
     ]
     
     # Filtrer pour les crimes et délits
-    print(f"\nFiltrage pour les crimes et delits...")
-    df_crimes = df_herault[df_herault['indicateur'].isin(indicateurs_crimes_delits)].copy()
-    print(f"  -> {len(df_crimes):,} lignes de crimes et delits")
-    print(f"\n  Indicateurs inclus:")
-    for ind in indicateurs_crimes_delits:
-        count = len(df_crimes[df_crimes['indicateur'] == ind])
-        if count > 0:
-            print(f"    - {ind}: {count:,} lignes")
+    print(f"\nFiltrage pour les crimes et délits...")
+    df_crimes = df_2019[df_2019['indicateur'].isin(indicateurs_crimes_delits)].copy()
+    print(f"  → {len(df_crimes):,} lignes de crimes et délits")
+    
+    # Gérer les colonnes nombre et taux avec fallback sur complement_info
+    print(f"\n  📊 Traitement des colonnes nombre et taux...")
+    
+    # Convertir les colonnes en numérique
+    df_crimes['nombre'] = pd.to_numeric(df_crimes['nombre'], errors='coerce')
+    df_crimes['taux_pour_mille'] = pd.to_numeric(df_crimes['taux_pour_mille'], errors='coerce')
+    df_crimes['complement_info_nombre'] = pd.to_numeric(df_crimes['complement_info_nombre'], errors='coerce')
+    df_crimes['complement_info_taux'] = pd.to_numeric(df_crimes['complement_info_taux'], errors='coerce')
+    
+    # Remplacer les valeurs vides ou nulles par les valeurs de complement
+    df_crimes['nombre_final'] = df_crimes['nombre'].fillna(0)
+    df_crimes.loc[df_crimes['nombre_final'] == 0, 'nombre_final'] = df_crimes.loc[df_crimes['nombre_final'] == 0, 'complement_info_nombre'].fillna(0)
+    
+    df_crimes['taux_final'] = df_crimes['taux_pour_mille'].fillna(0)
+    df_crimes.loc[df_crimes['taux_final'] == 0, 'taux_final'] = df_crimes.loc[df_crimes['taux_final'] == 0, 'complement_info_taux'].fillna(0)
+    
+    print(f"  → Utilisation des colonnes complement_info pour les valeurs manquantes")
+    
+    # Agréger par CODGEO_2025: somme des nombres, moyenne des taux
+    print(f"\n  🔢 Agrégation par commune...")
+    print(f"     - Somme des nombres de délits")
+    print(f"     - Moyenne du taux pour mille")
+    
+    df_aggregated = df_crimes.groupby('CODGEO_2025').agg({
+        'nombre_final': 'sum',
+        'taux_final': 'mean'
+    }).reset_index()
+    
+    # Renommer les colonnes
+    df_aggregated.columns = ['code_commune', 'nombre_delits', 'taux_delits_pour_mille']
+    
+    # Arrondir les valeurs
+    df_aggregated['nombre_delits'] = df_aggregated['nombre_delits'].round(0).astype(int)
+    df_aggregated['taux_delits_pour_mille'] = df_aggregated['taux_delits_pour_mille'].round(2)
+    
+    print(f"  → {len(df_aggregated)} communes avec données agrégées")
     
     # Sauvegarder en CSV
     output_file = os.path.join(PROCESSED_DATA_PATH, 'crimes_delits_clean.csv')
-    print(f"\nSauvegarde en CSV...")
-    df_crimes.to_csv(output_file, index=False, encoding='utf-8-sig')
-    print(f"  -> Fichier sauvegarde: {output_file}")
+    print(f"\n  💾 Sauvegarde en CSV...")
+    df_aggregated.to_csv(output_file, index=False, encoding='utf-8-sig')
+    print(f"  → Fichier sauvegardé: {output_file}")
     
     # Afficher des statistiques
-    print(f"\nStatistiques du dataset:")
-    print(f"  - Nombre de communes: {df_crimes['CODGEO_2025'].nunique()}")
-    print(f"  - Annees disponibles: {sorted(df_crimes['annee'].unique())}")
-    print(f"  - Nombre d'indicateurs: {df_crimes['indicateur'].nunique()}")
-    print(f"  - Colonnes: {len(df_crimes.columns)}")
+    print(f"\n  📈 Statistiques du dataset final:")
+    print(f"     - Nombre de communes: {len(df_aggregated)}")
+    print(f"     - Année: 2019")
+    print(f"     - Total délits Hérault: {df_aggregated['nombre_delits'].sum():,}")
+    print(f"     - Moyenne délits par commune: {df_aggregated['nombre_delits'].mean():.1f}")
+    print(f"     - Taux moyen pour mille: {df_aggregated['taux_delits_pour_mille'].mean():.2f}")
+    print(f"     - Colonnes: {', '.join(df_aggregated.columns)}")
+    
+    # Afficher un aperçu
+    print(f"\n  📋 Aperçu des données (premières communes):")
+    print(df_aggregated.head(10).to_string(index=False))
     
     print("\n" + "=" * 60)
-    print("Traitement termine avec succes!")
+    print("✅ Traitement terminé avec succès!")
     
     return output_file
 
@@ -916,6 +963,71 @@ def process_rsa_data():
         return df_rsa
 
 
+def process_producteurs_terroir_data():
+    """
+    Traite les données des producteurs de terroir
+    Garde uniquement la colonne Commune
+    """
+    print("\n🌾 Traitement des données des producteurs de terroir...")
+    
+    terroir_file = os.path.join(RAW_DATA_PATH, 'producteurs-de-terroir.csv')
+    
+    # Lire directement avec pandas en spécifiant quotechar pour gérer les ; dans les descriptions
+    print(f"  → Lecture du CSV avec gestion des guillemets...")
+    df_pandas = pd.read_csv(terroir_file, sep=';', quotechar='"', encoding='utf-8')
+    print(f"  → {len(df_pandas)} lignes chargées")
+    
+    print(f"  → Colonnes disponibles: {', '.join(df_pandas.columns)}")
+    
+    # Identifier la colonne Commune
+    commune_col = None
+    for col in df_pandas.columns:
+        col_lower = col.lower()
+        if col_lower == 'commune':
+            commune_col = col
+            break
+    
+    print(f"  → Colonne identifiée: {commune_col}")
+    
+    if commune_col:
+        # Normaliser les noms de communes
+        df_pandas[commune_col] = df_pandas[commune_col].str.upper().str.strip()
+        
+        # Grouper par commune et compter le nombre de producteurs
+        print(f"  → Groupement par commune et comptage des producteurs...")
+        df_result = df_pandas.groupby(commune_col).size().reset_index(name='Nombre Producteur')
+        df_result.columns = ['Commune', 'Nombre Producteur']
+        
+        print(f"  → {len(df_pandas)} producteurs → {len(df_result)} communes uniques")
+        
+        # Afficher des statistiques
+        print(f"\n  📈 Statistiques:")
+        print(f"     - Total producteurs: {df_result['Nombre Producteur'].sum()}")
+        print(f"     - Moyenne par commune: {df_result['Nombre Producteur'].mean():.1f}")
+        print(f"     - Médiane: {df_result['Nombre Producteur'].median():.0f}")
+        print(f"     - Max (commune la plus représentée): {df_result['Nombre Producteur'].max()}")
+        
+        # Afficher un aperçu
+        print(f"\n  📋 Aperçu des données (premières communes):")
+        print(df_result.head(10).to_string(index=False))
+        
+        # Sauvegarder
+        output_path = os.path.join(PROCESSED_DATA_PATH, 'producteurs_terroir_clean.csv')
+        df_result.to_csv(output_path, index=False, encoding='utf-8')
+        
+        print(f"\n  ✓ Données des producteurs de terroir traitées et sauvegardées")
+        print(f"  → {output_path}")
+        print(f"  → Colonnes finales: Commune, Nombre Producteur")
+        
+        # Retourner en Spark DataFrame
+        return spark.createDataFrame(df_result)
+    else:
+        print(f"  ⚠️ Colonne Commune non trouvée, sauvegarde sans traitement")
+        output_path = os.path.join(PROCESSED_DATA_PATH, 'producteurs_terroir_clean.csv')
+        df_pandas.to_csv(output_path, index=False, encoding='utf-8')
+        return df_terroir
+
+
 if __name__ == "__main__":
     try:
         # Exécuter tous les traitements
@@ -924,15 +1036,14 @@ if __name__ == "__main__":
         df_education = process_education_data()
         df_employment = process_employment_data()
         df_sociopro = process_sociopro_data()
-        #df_communes = process_communes_data()
-        
         # Traiter les crimes et délits
-        #crimes_csv = process_crimes_delits_herault()
-        
+        crimes_csv = process_crimes_delits_herault()
         # Traiter les revenus fiscaux
         df_revenus = process_revenus_fiscaux_data()
         # Traiter les données RSA
         df_rsa = process_rsa_data()
+        # Traiter les données des producteurs de terroir
+        df_producteurs = process_producteurs_terroir_data()
 
         print("\n" + "=" * 60)
         print("✅ Pipeline ETL terminé avec succès!")
