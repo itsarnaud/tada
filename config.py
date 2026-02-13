@@ -1,53 +1,39 @@
-# Configuration du projet Electio-Analytics
-
-## Périmètre géographique
-DEPARTEMENT = "Hérault"
-CODE_DEPARTEMENT = "34"
-REGION = "Occitanie"
-
-## Justification du choix
 """
-Le département de l'Hérault (34) a été choisi pour ce POC pour les raisons suivantes:
-
-1. DISPONIBILITÉ DES DONNÉES:
-   - Données électorales complètes (municipales 2020)
-   - Indicateurs socio-économiques détaillés (INSEE)
-   - Données démographiques par commune
-   - Statistiques sur l'emploi, le logement, l'éducation
-
-2. REPRÉSENTATIVITÉ:
-   - Population: ~1,2 million d'habitants
-   - 342 communes de tailles variées
-   - Mélange urbain/rural (Montpellier + zones rurales)
-   - Diversité socio-économique importante
-
-3. PERTINENCE ÉLECTORALE:
-   - Département politiquement contrasté
-   - Historique électoral riche
-   - Variations importantes entre communes
-   - Tendances électorales représentatives
-
-4. VOLUMÉTRIE EXPLOITABLE:
-   - Taille suffisante pour l'analyse statistique
-   - Pas trop volumineuse pour le POC
-   - Permet des modèles prédictifs robustes
+Configuration du projet ETL
 """
 
-## Indicateurs retenus pour l'analyse
+import os
 
-INDICATEURS = {
-    "demographie": [
-        "population_totale",
-        "evolution_population",
-        "densite_population",
-        "repartition_par_age",
-        "taux_vieillissement"
-    ],
-    "economie": [
-        "taux_chomage",
-        "population_active",
-        "categories_socioprofessionnelles",
-        "nombre_entreprises"
+# Chemins de base
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, 'data')
+
+# Chemins des données
+RAW_DATA_DIR = os.path.join(DATA_DIR, 'raw')
+PROCESSED_DATA_DIR = os.path.join(DATA_DIR, 'processed')
+FINAL_DATA_DIR = os.path.join(DATA_DIR, 'final')
+
+# Configuration Spark
+SPARK_CONFIG = {
+    'app_name': 'ETL_Pipeline',
+    'master': 'local[*]',
+    'memory': '4g',
+    'executor_cores': 2
+}
+
+# Options de lecture CSV par défaut
+CSV_READ_OPTIONS = {
+    'header': True,
+    'inferSchema': True,
+    'sep': ','
+}
+
+# Options d'écriture
+WRITE_OPTIONS = {
+    'mode': 'overwrite',
+    'header': True
+}
+
     ],
     "social": [
         "niveau_vie_median",

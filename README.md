@@ -1,53 +1,101 @@
-# 🗳️ Electio-Analytics - Projet de Prédiction Électorale
-## POC - Département de l'Hérault (34)
+# � Projet ETL
 
-[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
-[![PySpark](https://img.shields.io/badge/PySpark-3.x-orange.svg)](https://spark.apache.org/docs/latest/api/python/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+Pipeline d'extraction, transformation et chargement de données avec PySpark.
 
----
-
-## 📋 Table des Matières
-
-- [Vue d'ensemble](#vue-densemble)
-- [Architecture du projet](#architecture-du-projet)
-- [Installation](#installation)
-- [Utilisation](#utilisation)
-- [Structure des données](#structure-des-données)
-- [Pipeline ETL](#pipeline-etl)
-- [Modèle prédictif](#modèle-prédictif)
-- [Livrables](#livrables)
-- [Équipe](#équipe)
-
----
-
-## 🎯 Vue d'ensemble
-
-Ce projet constitue une **Preuve de Concept (POC)** pour **Electio-Analytics**, start-up spécialisée dans le conseil stratégique électoral. L'objectif est de construire un modèle prédictif des tendances électorales à moyen terme (1 à 3 ans) basé sur des indicateurs socio-économiques.
-
-### Objectifs
-
-- ✅ Valider la faisabilité d'un modèle prédictif électoral
-- ✅ Identifier les indicateurs les plus corrélés aux résultats électoraux
-- ✅ Construire un pipeline ETL automatisé et reproductible
-- ✅ Fournir des visualisations exploitables pour la prise de décision
-
-### Périmètre
-
-- **Géographie :** Département de l'Hérault (34) - 342 communes
-- **Élections :** Municipales 2020 (2e tour)
-- **Indicateurs :** Démographie, emploi, éducation, pauvreté, logement
-
----
-
-## 🏗️ Architecture du Projet
+## 📋 Structure du Projet
 
 ```
 tada/
-│
 ├── data/
-│   ├── raw/                    # Données brutes (CSV sources)
-│   ├── processed/              # Données nettoyées par dataset
+│   ├── raw/              # Données sources brutes
+│   ├── processed/        # Données intermédiaires
+│   └── final/            # Données finales traitées
+├── etl/
+│   ├── extract.py        # Extraction des données
+│   ├── transform.py      # Transformation et nettoyage
+│   ├── load.py           # Chargement et sauvegarde
+│   └── main.py           # Pipeline principal
+├── models/               # Modèles (à venir)
+├── config.py            # Configuration
+└── requirements.txt     # Dépendances Python
+```
+
+## 🚀 Installation
+
+1. Installer les dépendances:
+```bash
+pip install -r requirements.txt
+```
+
+2. Configurer Java (requis pour PySpark):
+   - Installer JDK 8 ou 11
+   - Définir `JAVA_HOME`
+
+## 💻 Utilisation
+
+### Lancer le pipeline ETL complet:
+
+```bash
+python etl/main.py
+```
+
+### Utiliser les modules individuellement:
+
+```python
+from etl.extract import create_spark_session, extract_csv
+from etl.transform import clean_column_names, remove_duplicates
+from etl.load import save_to_csv, save_to_parquet
+
+# Initialiser Spark
+spark = create_spark_session("MonApp")
+
+# Extraire
+df = extract_csv(spark, "data/raw/fichier.csv")
+
+# Transformer
+df = clean_column_names(df)
+df = remove_duplicates(df)
+
+# Charger
+save_to_csv(df, "data/final/resultat.csv")
+```
+
+## 📦 Modules ETL
+
+### `extract.py`
+- `create_spark_session()` - Créer une session Spark
+- `extract_csv()` - Charger des fichiers CSV
+- `extract_json()` - Charger des fichiers JSON
+- `extract_parquet()` - Charger des fichiers Parquet
+
+### `transform.py`
+- `clean_column_names()` - Nettoyer les noms de colonnes
+- `remove_duplicates()` - Supprimer les doublons
+- `handle_missing_values()` - Gérer les valeurs manquantes
+- `cast_columns_types()` - Convertir les types de colonnes
+- `filter_rows()` - Filtrer les lignes
+- `aggregate_data()` - Agréger les données
+
+### `load.py`
+- `save_to_csv()` - Sauvegarder en CSV
+- `save_to_parquet()` - Sauvegarder en Parquet
+- `save_to_json()` - Sauvegarder en JSON
+- `save_multiple_formats()` - Sauvegarder dans plusieurs formats
+
+## 🔧 Configuration
+
+Modifier les chemins dans [config.py](config.py) selon vos besoins.
+
+## 📝 Notes
+
+- Les données sources doivent être placées dans `data/raw/`
+- Les résultats seront générés dans `data/final/`
+- PySpark nécessite Java 8 ou 11
+
+## 📄 Licence
+
+MIT
+
 │   └── final/                  # Base de données intégrée (SQLite)
 │
 ├── etl/

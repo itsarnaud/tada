@@ -1,139 +1,66 @@
 """
-Module de transformation des données pour le projet Electio-Analytics
-Nettoie, normalise et prépare les données pour l'analyse et la modélisation
+Module de transformation des données
+Orchestre les différentes couches de traitement (Bronze, Silver, Gold)
 """
 
-from pyspark.sql import DataFrame
-from pyspark.sql.functions import col, trim, upper, when, regexp_replace, lower, lit
-from pyspark.sql.types import IntegerType, DoubleType, StringType
-import re
+import sys
+import os
+
+# Ajouter le dossier parent au path pour les imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Import des couches de traitement
+from etl.bronze.bronze import process_all_datasets as process_bronze_layer
 
 
-def clean_column_names(df: DataFrame) -> DataFrame:
+def run_bronze_layer():
     """
-    Nettoie les noms de colonnes : supprime espaces, caractères spéciaux, 
-    met en minuscule et remplace espaces par underscores
+    Exécute la couche Bronze (ingestion des données brutes)
     """
-    for col_name in df.columns:
-        new_col_name = col_name.lower()
-        new_col_name = re.sub(r'[éèêë]', 'e', new_col_name)
-        new_col_name = re.sub(r'[àâä]', 'a', new_col_name)
-        new_col_name = re.sub(r'[ùûü]', 'u', new_col_name)
-        new_col_name = re.sub(r'[îï]', 'i', new_col_name)
-        new_col_name = re.sub(r'[ôö]', 'o', new_col_name)
-        new_col_name = re.sub(r'[ç]', 'c', new_col_name)
-        new_col_name = re.sub(r'[^a-z0-9_]', '_', new_col_name)
-        new_col_name = re.sub(r'_+', '_', new_col_name)
-        new_col_name = new_col_name.strip('_')
-        df = df.withColumnRenamed(col_name, new_col_name)
-    return df
+    print("\n🥉 Lancement de la couche BRONZE...")
+    datasets = process_bronze_layer()
+    return datasets
 
 
-def remove_duplicates(df: DataFrame) -> DataFrame:
+def run_silver_layer():
     """
-    Supprime les lignes dupliquées
+    Exécute la couche Silver (nettoyage et transformation)
+    TODO: À implémenter
     """
-    return df.dropDuplicates()
+    print("\n🥈 Couche SILVER - À implémenter")
+    pass
 
 
-def handle_missing_values(df: DataFrame, strategy='drop', fill_value=None) -> DataFrame:
+def run_gold_layer():
     """
-    Gère les valeurs manquantes selon la stratégie choisie
+    Exécute la couche Gold (agrégation et données métier)
+    TODO: À implémenter
+    """
+    print("\n🥇 Couche GOLD - À implémenter")
+    pass
+
+
+def run_all_transformations():
+    """
+    Exécute toutes les couches de transformation
+    """
+    print("\n" + "=" * 70)
+    print("🔄 PIPELINE DE TRANSFORMATION - Architecture Medallion")
+    print("=" * 70)
     
-    Args:
-        df: DataFrame à traiter
-        strategy: 'drop' pour supprimer, 'fill' pour remplir
-        fill_value: valeur de remplacement si strategy='fill'
-    """
-    if strategy == 'drop':
-        return df.dropna()
-    elif strategy == 'fill' and fill_value is not None:
-        return df.fillna(fill_value)
-    return df
-
-
-def normalize_commune_names(df: DataFrame, commune_col: str) -> DataFrame:
-    """
-    Normalise les noms de communes (majuscules, trim)
-    """
-    return df.withColumn(commune_col, upper(trim(col(commune_col))))
-
-
-def cast_columns_types(df: DataFrame, type_mapping: dict) -> DataFrame:
-    """
-    Convertit les colonnes dans les types appropriés
+    # Bronze: Ingestion brute
+    bronze_datasets = run_bronze_layer()
     
-    Args:
-        df: DataFrame
-        type_mapping: dict avec {nom_colonne: type_spark}
-    """
-    for col_name, col_type in type_mapping.items():
-        if col_name in df.columns:
-            df = df.withColumn(col_name, col(col_name).cast(col_type))
-    return df
-
-
-def filter_department(df: DataFrame, dept_col: str, dept_code: str) -> DataFrame:
-    """
-    Filtre les données pour un département spécifique
+    # Silver: Nettoyage et enrichissement
+    # run_silver_layer()
     
-    Args:
-        df: DataFrame
-        dept_col: nom de la colonne département
-        dept_code: code du département (ex: '34' pour Hérault)
-    """
-    return df.filter(col(dept_col) == dept_code)
-
-
-def aggregate_by_commune(df: DataFrame, commune_col: str, agg_columns: dict) -> DataFrame:
-    """
-    Agrège les données par commune
+    # Gold: Données métier finales
+    # run_gold_layer()
     
-    Args:
-        df: DataFrame
-        commune_col: colonne de regroupement
-        agg_columns: dict avec {colonne: fonction d'agrégation} ex: {'population': 'sum'}
-    """
-    return df.groupBy(commune_col).agg(agg_columns)
+    print("\n" + "=" * 70)
+    print("✅ Pipeline de transformation terminé")
+    print("=" * 70)
 
 
-def create_key_column(df: DataFrame, key_name: str, columns: list) -> DataFrame:
-    """
-    Crée une colonne clé en concaténant plusieurs colonnes
-    
-    Args:
-        df: DataFrame
-        key_name: nom de la nouvelle colonne
-        columns: liste des colonnes à concaténer
-    """
-    from pyspark.sql.functions import concat_ws
-    return df.withColumn(key_name, concat_ws('_', *[col(c) for c in columns]))
-
-
-def standardize_values(df: DataFrame, column: str, mapping: dict) -> DataFrame:
-    """
-    Standardise les valeurs d'une colonne selon un mapping
-    
-    Args:
-        df: DataFrame
-        column: colonne à standardiser
-        mapping: dict de correspondance ancienne_valeur -> nouvelle_valeur
-    """
-    for old_val, new_val in mapping.items():
-        df = df.withColumn(column, when(col(column) == old_val, new_val).otherwise(col(column)))
-    return df
-
-
-def remove_outliers(df: DataFrame, column: str, lower_percentile=0.01, upper_percentile=0.99) -> DataFrame:
-    """
-    Supprime les valeurs aberrantes selon les percentiles
-    
-    Args:
-        df: DataFrame
-        column: colonne à nettoyer
-        lower_percentile: percentile inférieur
-        upper_percentile: percentile supérieur
-    """
-    bounds = df.approxQuantile(column, [lower_percentile, upper_percentile], 0.01)
-    return df.filter((col(column) >= bounds[0]) & (col(column) <= bounds[1]))
-
+if __name__ == "__main__":
+    run_all_transformations()
