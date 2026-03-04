@@ -117,17 +117,18 @@ def process_silver_layer(output_file: str = None) -> pd.DataFrame | None:
         'REVEIL EUR':        'DROITE',
         'LFI - UP':          'GAUCHE',
     }
-    elections['bord_politique'] = (
+    elections['nuance_liste_gagnante'] = (
         elections['liste_gagnante']
         .map(BORD_MAP)
         .fillna('NON COMMUNIQUE')
     )
+    elections.rename(columns={'pct_voix_exprimes': 'pct_voix_liste_gagnante'}, inplace=True)
 
     base = base.merge(
-        elections[['dep_code', 'annee', 'bord_politique']],
+        elections[['dep_code', 'annee', 'nuance_liste_gagnante', 'pct_voix_liste_gagnante']],
         on=['dep_code', 'annee'], how='left'
     )
-    base['bord_politique'] = base['bord_politique'].fillna('NON COMMUNIQUE')
+    base['nuance_liste_gagnante'] = base['nuance_liste_gagnante'].fillna('NON COMMUNIQUE')
 
     # ── 5. NAISSANCES ─────────────────────────────────────────────────────────
     print("🔗 Jointure naissances...")
