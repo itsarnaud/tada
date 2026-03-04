@@ -11,6 +11,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Import des couches de traitement
 from etl.bronze.bronze import process_all_datasets as process_bronze_layer
+from etl.silver.silver import process_silver_layer
 
 
 def run_bronze_layer():
@@ -24,11 +25,11 @@ def run_bronze_layer():
 
 def run_silver_layer():
     """
-    Exécute la couche Silver (nettoyage et transformation)
-    TODO: À implémenter
+    Exécute la couche Silver (consolidation de tous les datasets bronze)
     """
-    print("\n🥈 Couche SILVER - À implémenter")
-    pass
+    print("\n🥈 Lancement de la couche SILVER...")
+    df = process_silver_layer()
+    return df
 
 
 def run_gold_layer():
@@ -50,9 +51,9 @@ def run_all_transformations():
     
     # Bronze: Ingestion brute
     bronze_datasets = run_bronze_layer()
-    
-    # Silver: Nettoyage et enrichissement
-    # run_silver_layer()
+
+    # Silver: Consolidation
+    run_silver_layer()
     
     # Gold: Données métier finales
     # run_gold_layer()

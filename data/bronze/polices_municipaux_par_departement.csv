@@ -1,0 +1,203 @@
+﻿dep_libelle;dep_code;annee;pct_policiers_municipaux
+Ain;01;2019;0.0238
+Ain;01;2024;0.0265
+Aisne;02;2019;0.0145
+Aisne;02;2024;0.0186
+Allier;03;2019;0.0182
+Allier;03;2024;0.0207
+Alpes De Haute-Provence;04;2019;0.0426
+Alpes-De-Haute-Provence;04;2024;0.0438
+Hautes-Alpes;05;2019;0.0262
+Hautes-Alpes;05;2024;0.0289
+Alpes Maritimes;06;2019;0.1141
+Alpes-Maritimes;06;2024;0.1079
+Ardèche;07;2019;0.0174
+Ardèche;07;2024;0.0194
+Ardennes;08;2019;0.0344
+Ardennes;08;2024;0.0363
+Ariège;09;2019;0.0157
+Ariège;09;2024;0.0218
+Aube;10;2019;0.03
+Aube;10;2024;0.0353
+Aude;11;2019;0.0564
+Aude;11;2024;0.0649
+Aveyron;12;2019;0.0136
+Aveyron;12;2024;0.0158
+Bouches-Du-Rhône;13;2019;0.0739
+Bouches-Du-Rhône;13;2024;0.0803
+Calvados;14;2019;0.0258
+Calvados;14;2024;0.0279
+Cantal;15;2019;0.009
+Cantal;15;2024;0.0097
+Charente;16;2019;0.0173
+Charente;16;2024;0.0188
+Charente-Maritime;17;2019;0.031
+Charente-Maritime;17;2024;0.0313
+Cher;18;2019;0.0235
+Cher;18;2024;0.0239
+Corrèze;19;2019;0.0133
+Corrèze;19;2024;0.0159
+Côte D’Or;21;2019;0.0242
+Cote D’Or;21;2024;0.0305
+Côte D’Armor;22;2019;0.0145
+Cotes D’Armor;22;2024;0.0152
+Creuse;23;2019;0.0
+Creuse;23;2024;0.0
+Dordogne;24;2019;0.0157
+Dordogne;24;2024;0.0161
+Doubs;25;2019;0.0221
+Doubs;25;2024;0.0207
+Drôme;26;2019;0.043
+Drome;26;2024;0.0506
+Eure;27;2019;0.02
+Eure;27;2024;0.0223
+Eure-Et-Loir;28;2019;0.0232
+Eure-Et-Loir;28;2024;0.0258
+Finistère;29;2019;0.0081
+Finistère;29;2024;0.0112
+Corse-Du-Sud;2A;2019;0.0353
+Corse-Du-Sud;2A;2024;0.0369
+Haute-Corse;2B;2019;0.0181
+Haute-Corse;2B;2024;0.0193
+Gard;30;2019;0.0827
+Gard;30;2024;0.0966
+Haute-Garonne;31;2019;0.0446
+Haute-Garonne;31;2024;0.0493
+Gers;32;2019;0.0136
+Gers;32;2024;0.0192
+Gironde;33;2019;0.0317
+Gironde;33;2024;0.039
+Hérault;34;2019;0.0799
+Hérault;34;2024;0.088
+Ille-Et-Vilaine;35;2019;0.0207
+Ille-Et-Vilaine;35;2024;0.0241
+Indre;36;2019;0.016
+Indre;36;2024;0.0196
+Indre-Et-Loire;37;2019;0.0341
+Indre-Et-Loire;37;2024;0.0358
+Isère;38;2019;0.0275
+Isère;38;2024;0.035
+Jura;39;2019;0.0162
+Jura;39;2024;0.0194
+Landes;40;2019;0.0268
+Landes;40;2024;0.0307
+Loir-Et-Cher;41;2019;0.0197
+Loir Et Cher;41;2024;0.021
+Loire;42;2019;0.0422
+Loire;42;2024;0.0459
+Haute-Loire;43;2019;0.0123
+Haute-Loire;43;2024;0.0184
+Loire-Atlantique;44;2019;0.0214
+Loire-Atlantique;44;2024;0.0255
+Loiret;45;2019;0.0447
+Loiret;45;2024;0.0481
+Lot;46;2019;0.0126
+Lot;46;2024;0.0114
+Lot-Et-Garonne;47;2019;0.0226
+Lot Et Garonne;47;2024;0.0277
+Lozère;48;2019;0.0131
+Lozère;48;2024;0.017
+Maine-Et-Loire;49;2019;0.0134
+Maine Et Loire;49;2024;0.0172
+Manche;50;2019;0.0115
+Manche;50;2024;0.0115
+Marne;51;2019;0.0302
+Marne;51;2024;0.0344
+Haute-Marne;52;2019;0.0081
+Haute-Marne;52;2024;0.0113
+Mayenne;53;2019;0.0055
+Mayenne;53;2024;0.0066
+Meurthe-Et-Moselle;54;2019;0.0237
+Meurthe Et Moselle;54;2024;0.0242
+Meuse;55;2019;0.0109
+Meuse;55;2024;0.0112
+Morbihan;56;2019;0.0186
+Morbihan;56;2024;0.0214
+Moselle;57;2019;0.029
+Moselle;57;2024;0.0339
+Nièvre;58;2019;0.0157
+Nièvre;58;2024;0.018
+Nord;59;2019;0.0339
+Nord;59;2024;0.0321
+Oise;60;2019;0.0356
+Oise;60;2024;0.0369
+Orne;61;2019;0.0104
+Orne;61;2024;0.0102
+Pas-De-Calais;62;2019;0.0191
+Pas De Calais;62;2024;0.0272
+Puy-De-Dôme;63;2019;0.019
+Puy-De-Dôme;63;2024;0.0241
+Pyrénées-Atlantiques;64;2019;0.027
+Pyrénées-Atlantiques;64;2024;0.0323
+Hautes-Pyrénées;65;2019;0.0218
+Hautes-Pyrénées;65;2024;0.0314
+Pyrénées-Orientales;66;2019;0.0892
+Pyrénées Orientales;66;2024;0.1006
+Bas-Rhin;67;2019;0.0262
+Bas-Rhin;67;2024;0.0277
+Haut-Rhin;68;2019;0.0284
+Haut-Rhin;68;2024;0.0322
+Rhône;69;2019;0.0441
+Rhône;69;2024;0.0482
+Rhône;70;2019;0.0072
+Haute-Saône;70;2024;0.0082
+Saône-Et-Loire;71;2019;0.0158
+Saône-Et-Loire;71;2024;0.021
+Sarthe;72;2019;0.0115
+Sarthe;72;2024;0.0138
+Savoie;73;2019;0.0307
+Savoie;73;2024;0.038
+Haute-Savoie;74;2019;0.0353
+Haute-Savoie;74;2024;0.041
+Paris *;75;2019;0.0
+Paris;75;2024;0.0845
+Seine-Maritime;76;2019;0.029
+Seine-Maritime;76;2024;0.0308
+Seine-Et-Marne;77;2019;0.0563
+Seine-Et-Marne;77;2024;0.0497
+Yvelines;78;2019;0.0394
+Yvelines;78;2024;0.0435
+Deux-Sèvres;79;2019;0.0101
+Deux-Sèvres;79;2024;0.0139
+Somme;80;2019;0.0254
+Somme;80;2024;0.0281
+Tarn;81;2019;0.0254
+Tarn;81;2024;0.0288
+Tarn-Et-Garonne;82;2019;0.0303
+Tarn Et Garonne;82;2024;0.027
+Var;83;2019;0.0954
+Var;83;2024;0.105
+Vaucluse;84;2019;0.0837
+Vaucluse;84;2024;0.0879
+Vendée;85;2019;0.0174
+Vendée;85;2024;0.0212
+Vienne;86;2019;0.0119
+Vienne;86;2024;0.0142
+Haute-Vienne;87;2019;0.0244
+Haute-Vienne;87;2024;0.025
+Vosges;88;2019;0.025
+Vosges;88;2024;0.0302
+Yonne;89;2019;0.0191
+Yonne;89;2024;0.0229
+Territoire De Belfort;90;2019;0.0283
+Territoire De Belfort;90;2024;0.0302
+Essonne;91;2019;0.0383
+Essonne;91;2024;0.041
+Hauts-De-Seine;92;2019;0.0438
+Hauts-De-Seine;92;2024;0.0434
+Seine-Saint-Denis;93;2019;0.0378
+Seine-Saint-Denis;93;2024;0.0449
+Val-De-Marne;94;2019;0.0298
+Val-De-Marne;94;2024;0.0347
+Val D’Oise;95;2019;0.0466
+Val-D’Oise;95;2024;0.0582
+Guadeloupe;971;2019;0.0867
+Guadeloupe;971;2024;0.0893
+Martinique;972;2019;0.0584
+Martinique;972;2024;0.0604
+Guyane *;973;2019;0.044
+Guyane;973;2024;0.0586
+La Réunion;974;2019;0.0343
+Réunion;974;2024;0.0379
+Mayotte;976;2019;0.0597
+Mayotte;976;2024;0.0721

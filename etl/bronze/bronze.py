@@ -16,6 +16,10 @@ from etl.bronze.script_clean.process_trage import process_trage_data
 from etl.bronze.script_clean.process_impots import process_impots_data
 from etl.bronze.script_clean.process_dmd_emplois import process_dmd_emplois_data
 from etl.bronze.script_clean.process_rsa import process_rsa_data
+from etl.bronze.script_clean.process_logements import process_logements_data
+from etl.bronze.script_clean.process_naissances import process_naissances_data
+from etl.bronze.script_clean.process_polices_municipaux import process_polices_municipaux_data
+from etl.bronze.script_clean.process_crimes import process_crimes
 
 
 def process_all_datasets():
@@ -110,9 +114,41 @@ def process_all_datasets():
     except Exception as e:
         print(f"❌ Erreur lors du traitement RSA 2024: {e}")
     
-    # TODO: Ajouter d'autres datasets ici
-    # df_dataset2 = process_dataset2()
-    # df_dataset3 = process_dataset3()
+    # Traiter les types de logements 2019 & 2024
+    try:
+        print("\n📥 Appel du script: process_logements.py (années 2019 & 2024)")
+        df_logements = process_logements_data()
+        if df_logements is not None:
+            datasets_processed.append('type_logements')
+    except Exception as e:
+        print(f"❌ Erreur lors du traitement des types de logements: {e}")
+
+    # Traiter les naissances 2019 & 2024
+    try:
+        print("\n📥 Appel du script: process_naissances.py (années 2019 & 2024)")
+        df_naissances = process_naissances_data()
+        if df_naissances is not None:
+            datasets_processed.append('naissances')
+    except Exception as e:
+        print(f"❌ Erreur lors du traitement des naissances: {e}")
+
+    # Traiter les effectifs de police municipale 2019 & 2024
+    try:
+        print("\n📥 Appel du script: process_polices_municipaux.py (années 2019 & 2024)")
+        df_polices = process_polices_municipaux_data()
+        if df_polices is not None:
+            datasets_processed.append('polices_municipaux')
+    except Exception as e:
+        print(f"❌ Erreur lors du traitement des polices municipaux: {e}")
+
+    # Traiter les crimes et délits
+    try:
+        print("\n📥 Appel du script: process_crimes.py")
+        df_crimes = process_crimes()
+        if df_crimes is not None:
+            datasets_processed.append('crimes_delits')
+    except Exception as e:
+        print(f"❌ Erreur lors du traitement des crimes et délits: {e}")
     
     print("\n" + "=" * 70)
     print(f"✅ Bronze Layer terminé - {len(datasets_processed)} dataset(s) traité(s)")
