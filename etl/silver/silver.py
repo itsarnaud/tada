@@ -6,6 +6,7 @@ Sortie : data/silver/departements_2019_2024.csv
 
 import os
 import pandas as pd
+from sklearn.impute import SimpleImputer
 
 
 # ---------------------------------------------------------------------------
@@ -196,6 +197,19 @@ def process_silver_layer(output_file: str = None) -> pd.DataFrame | None:
         coverage = round((1 - n_null / len(base)) * 100, 1)
         flag = "✅" if n_null == 0 else ("⚠️ " if n_null <= 10 else "❌")
         print(f"   {flag} {col:<40} {coverage:>5}% ({n_null} NaN)")
+
+    # ── Imputation des valeurs manquantes ─────────────────────────────────────
+    print("\nImputation des valeurs manquantes (médiane)...")
+    numeric_cols = base.select_dtypes(include=['float64', 'int64']).columns.tolist()
+    numeric_cols = [c for c in numeric_cols if c not in ('dep_code', 'annee')]
+    
+    if numeric_cols:
+        imputer = SimpleImputer(strategy='median')
+        base[numeric_cols] = pd.DataFrame(
+            imputer.fit_transform(base[numeric_cols]),
+            columns=numeric_cols
+        )
+        print(f"   → Trous comblés avec la médiane ({len(numeric_cols)} colonnes numériques)")
 
     # ── Sauvegarde ────────────────────────────────────────────────────────────
     print(f"\n💾 Sauvegarde vers: {output_file}")
