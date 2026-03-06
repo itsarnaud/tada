@@ -195,6 +195,20 @@ def process_silver_layer(output_file: str = None) -> pd.DataFrame | None:
         on=['dep_code', 'annee'], how='left'
     )
 
+    # ── 10. NORMALISATION EN POURCENTAGES (base : pop_total) ─────────────────
+    print("📐 Conversion des effectifs en pourcentages (base: pop_total)...")
+    for raw_col, pct_col in [
+        ('pop_0_14',                 'pct_pop_0_14'),
+        ('pop_15_29',                'pct_pop_15_29'),
+        ('pop_30_64',                'pct_pop_30_64'),
+        ('pop_64plus',               'pct_pop_64plus'),
+        ('nombre_demandeurs_emploi', 'pct_demandeurs_emploi'),
+        ('naissances',               'pct_naissances'),
+        ('nombre_personnes_rsa',     'pct_personnes_rsa'),
+    ]:
+        base[pct_col] = (base[raw_col] / base['pop_total'] * 100).round(2)
+        base.drop(columns=[raw_col], inplace=True)
+
     # ── Résumé de couverture ──────────────────────────────────────────────────
     print(f"\n📊 Résumé ({len(base)} lignes × {len(base.columns)} colonnes) :")
     data_cols = [c for c in base.columns if c not in ('dep_code', 'dep_libelle', 'annee')]
