@@ -122,10 +122,16 @@ def process_silver_layer(output_file: str = None) -> pd.DataFrame | None:
         .map(BORD_MAP)
         .fillna('NON COMMUNIQUE')
     )
-    elections.rename(columns={'pct_voix_exprimes': 'pct_voix_liste_gagnante'}, inplace=True)
+    elections.rename(columns={
+        'pct_voix_exprimes':  'pct_voix_liste_gagnante',
+        '% vote droite':      'pct_vote_droite',
+        '% vote gauche':      'pct_vote_gauche',
+    }, inplace=True)
 
+    elec_cols = ['dep_code', 'annee', 'nuance_liste_gagnante', 'pct_voix_liste_gagnante',
+                 'pct_vote_droite', 'pct_vote_gauche']
     base = base.merge(
-        elections[['dep_code', 'annee', 'nuance_liste_gagnante', 'pct_voix_liste_gagnante']],
+        elections[[c for c in elec_cols if c in elections.columns]],
         on=['dep_code', 'annee'], how='left'
     )
     base['nuance_liste_gagnante'] = base['nuance_liste_gagnante'].fillna('NON COMMUNIQUE')
