@@ -1,4 +1,4 @@
-"""
+﻿"""
 Script de traitement des types de logements par département
 Filtre les années 2019 et 2024, calcule les % par type sur "Tous Logements"
 """
@@ -30,7 +30,7 @@ def process_logements_data(input_file=None, output_file=None):
         input_file = 'data/raw/TYPE LOGEMENTS/Donnees-annuelles-departementales-Logements.2026-02.csv'
 
     if output_file is None:
-        output_file = 'data/bronze/type_logements_par_departement.csv'
+        output_file = 'data/silver/type_logements_par_departement.csv'
 
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
 

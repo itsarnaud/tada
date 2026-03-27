@@ -1,4 +1,4 @@
-"""
+﻿"""
 Script de traitement des effectifs de police municipale par département
 Sources : effectifs-police-municipale-2019-.ods  /  enquete-stats-pm-2024.ods
 Sortie   : une ligne par département par année (2019 & 2024)
@@ -179,7 +179,7 @@ def process_polices_municipaux_data(
     if input_2024 is None:
         input_2024 = 'data/raw/POLICIERS MUNICIPAUX/enquete-stats-pm-2024.ods'
     if output_file is None:
-        output_file = 'data/bronze/polices_municipaux_par_departement.csv'
+        output_file = 'data/silver/polices_municipaux_par_departement.csv'
 
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
@@ -214,8 +214,8 @@ def process_polices_municipaux_data(
     print("\n📊 Chargement des données de population (tranche_age)...")
     pop_frames = []
     for year, trage_file in [
-        (2019, 'data/bronze/tranche_age_2019_par_departement.csv'),
-        (2024, 'data/bronze/tranche_age_2024_par_departement.csv'),
+        (2019, 'data/silver/tranche_age_2019_par_departement.csv'),
+        (2024, 'data/silver/tranche_age_2024_par_departement.csv'),
     ]:
         if not os.path.exists(trage_file):
             print(f"⚠️  Fichier population non trouvé: {trage_file}")

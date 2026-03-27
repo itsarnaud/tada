@@ -1,4 +1,4 @@
-"""
+﻿"""
 Script de traitement des populations par tranche d'âge
 Agrège les âges en 4 catégories: 0/14, 15/29, 30/64, 64+
 """
@@ -31,7 +31,7 @@ def process_trage_data(year=2019, input_file=None, output_file=None):
             raise ValueError(f"Année non supportée: {year}")
 
     if output_file is None:
-        output_file = f'data/bronze/tranche_age_{year}_par_departement.csv'
+        output_file = f'data/silver/tranche_age_{year}_par_departement.csv'
 
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
 

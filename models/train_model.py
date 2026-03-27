@@ -4,7 +4,7 @@ from sklearn.ensemble        import RandomForestRegressor
 from sklearn.metrics         import mean_absolute_error, r2_score
 import matplotlib.pyplot as plt
 
-df = pd.read_csv('./data/silver/departements_2019_2024.csv', sep=';')
+df = pd.read_csv('./data/gold/departements_2019_2024.csv', sep=';')
 
 ignored_cols = ['dep_code', 'dep_libelle', 'annee', 'nuance_liste_gagnante', 'pct_voix_liste_gagnante', 'pct_vote_droite', 'pct_vote_gauche']
 

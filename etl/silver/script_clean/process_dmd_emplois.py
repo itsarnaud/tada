@@ -1,4 +1,4 @@
-"""
+﻿"""
 Script de traitement des demandeurs d'emploi
 Agrège par année et département
 """
@@ -25,7 +25,7 @@ def process_dmd_emplois_data(input_file=None, output_file=None):
         input_file = 'data/raw/DEMANDEURS EMPLOIS/demandeurs_emplois_2019_2024.csv'
 
     if output_file is None:
-        output_file = 'data/bronze/demandeurs_emplois_par_departement.csv'
+        output_file = 'data/silver/demandeurs_emplois_par_departement.csv'
 
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
 

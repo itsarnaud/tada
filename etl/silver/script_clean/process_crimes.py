@@ -1,4 +1,4 @@
-"""
+﻿"""
 Process crimes et delits data.
 Aggregates by department and year (2019, 2024).
 Outputs: code_departement, taux_pour_mille (moyenne de tous les indicateurs), annee
@@ -12,7 +12,7 @@ def process_crimes():
     
     # Paths
     raw_path = Path("data/raw/CRIMES ET DELITS")
-    bronze_path = Path("data/bronze")
+    bronze_path = Path("data/silver")
     bronze_path.mkdir(parents=True, exist_ok=True)
     
     # Input file
@@ -59,6 +59,8 @@ def process_crimes():
     print(df_agg.head(10))
     print("\n...")
     print(df_agg.tail(5))
+
+    return df_agg
 
 if __name__ == "__main__":
     process_crimes()

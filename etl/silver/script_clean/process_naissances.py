@@ -1,4 +1,4 @@
-"""
+﻿"""
 Script de traitement des naissances par département
 Filtre EC_MEASURE=LVB, FREQ=A, GEO_OBJECT=DEP, OBS_STATUS=D
 Garde uniquement les années 2019 et 2024, une ligne par département par année
@@ -33,7 +33,7 @@ def process_naissances_data(input_file=None, output_file=None):
         input_file = 'data/raw/NAISSANCES/Naissance_all.csv'
 
     if output_file is None:
-        output_file = 'data/bronze/naissances_par_departement.csv'
+        output_file = 'data/silver/naissances_par_departement.csv'
 
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
 

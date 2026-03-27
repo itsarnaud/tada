@@ -1,4 +1,4 @@
-"""
+﻿"""
 Module de transformation des données
 Orchestre les différentes couches de traitement (Bronze, Silver, Gold)
 """
@@ -6,60 +6,42 @@ Orchestre les différentes couches de traitement (Bronze, Silver, Gold)
 import sys
 import os
 
-# Ajouter le dossier parent au path pour les imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Import des couches de traitement
-from etl.bronze.bronze import process_all_datasets as process_bronze_layer
-from etl.silver.silver import process_silver_layer
+from etl.bronze.bronze import ingest_raw_data as process_bronze_layer
+from etl.silver.silver import process_all_datasets as process_silver_layer
+from etl.gold.gold import process_gold_layer
 
 
 def run_bronze_layer():
-    """
-    Exécute la couche Bronze (ingestion des données brutes)
-    """
-    print("\n🥉 Lancement de la couche BRONZE...")
-    datasets = process_bronze_layer()
-    return datasets
+    print("Lancement de la couche BRONZE...")
+    result = process_bronze_layer()
+    return result
 
 
 def run_silver_layer():
-    """
-    Exécute la couche Silver (consolidation de tous les datasets bronze)
-    """
-    print("\n🥈 Lancement de la couche SILVER...")
-    df = process_silver_layer()
-    return df
+    print("Lancement de la couche SILVER...")
+    datasets = process_silver_layer()
+    return datasets
 
 
 def run_gold_layer():
-    """
-    Exécute la couche Gold (agrégation et données métier)
-    TODO: À implémenter
-    """
-    print("\n🥇 Couche GOLD - À implémenter")
-    pass
+    print("Lancement de la couche GOLD...")
+    df = process_gold_layer()
+    return df
 
 
 def run_all_transformations():
-    """
-    Exécute toutes les couches de transformation
-    """
-    print("\n" + "=" * 70)
-    print("🔄 PIPELINE DE TRANSFORMATION - Architecture Medallion")
     print("=" * 70)
-    
-    # Bronze: Ingestion brute
-    bronze_datasets = run_bronze_layer()
+    print("PIPELINE DE TRANSFORMATION - Architecture Medallion")
+    print("=" * 70)
 
-    # Silver: Consolidation
+    run_bronze_layer()
     run_silver_layer()
-    
-    # Gold: Données métier finales
-    # run_gold_layer()
-    
-    print("\n" + "=" * 70)
-    print("✅ Pipeline de transformation terminé")
+    run_gold_layer()
+
+    print("=" * 70)
+    print("Pipeline de transformation termine")
     print("=" * 70)
 
 

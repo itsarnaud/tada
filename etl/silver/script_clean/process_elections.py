@@ -1,4 +1,4 @@
-"""
+﻿"""
 Script de traitement des résultats électoraux par département
 Extrait la liste gagnante (meilleur % voix/exprimés) pour chaque département
 """
@@ -96,7 +96,7 @@ def process_elections_data(year=2024, input_file=None, output_file=None):
             raise ValueError(f"Année non supportée: {year}")
     
     if output_file is None:
-        output_file = f'data/bronze/elections_{year}_gagnants_par_departement.csv'
+        output_file = f'data/silver/elections_{year}_gagnants_par_departement.csv'
     
     # Créer le dossier de sortie si nécessaire
     os.makedirs(os.path.dirname(output_file), exist_ok=True)

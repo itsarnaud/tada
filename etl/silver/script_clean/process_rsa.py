@@ -1,4 +1,4 @@
-"""
+﻿"""
 Script de traitement des bénéficiaires RSA
 Agrège par département (2 premiers chiffres du code commune)
 """
@@ -26,7 +26,7 @@ def process_rsa_data(year=2020, input_file=None, output_file=None):
         input_file = f'data/raw/RSA/rsa_{year}.csv'
 
     if output_file is None:
-        output_file = f'data/bronze/rsa_{year}_par_departement.csv'
+        output_file = f'data/silver/rsa_{year}_par_departement.csv'
 
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
 

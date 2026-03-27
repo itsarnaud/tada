@@ -1,4 +1,4 @@
-"""
+﻿"""
 Script de traitement des revenus fiscaux par département
 Agrège toutes les communes par département
 """
@@ -27,7 +27,7 @@ def process_impots_data(year=2019, input_file=None, output_file=None):
         input_file = f'data/raw/IMPOTS/ircom_communes_complet_revenus_{year}.xlsx'
 
     if output_file is None:
-        output_file = f'data/bronze/revenus_fiscaux_{year}_par_departement.csv'
+        output_file = f'data/silver/revenus_fiscaux_{year}_par_departement.csv'
 
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
