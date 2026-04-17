@@ -10,7 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from etl.bronze.bronze import ingest_raw_data as process_bronze_layer
 from etl.silver.silver import process_all_datasets as process_silver_layer
-from etl.gold.gold import process_gold_layer
+from etl.gold.gold import process_gold_layer, process_gold_2014_layer
 
 
 def run_bronze_layer():
@@ -31,6 +31,12 @@ def run_gold_layer():
     return df
 
 
+def run_gold_2014_layer():
+    print("Lancement de la couche GOLD 2014...")
+    df = process_gold_2014_layer()
+    return df
+
+
 def run_all_transformations():
     print("=" * 70)
     print("PIPELINE DE TRANSFORMATION - Architecture Medallion")
@@ -39,6 +45,7 @@ def run_all_transformations():
     run_bronze_layer()
     run_silver_layer()
     run_gold_layer()
+    run_gold_2014_layer()
 
     print("=" * 70)
     print("Pipeline de transformation termine")

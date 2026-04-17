@@ -7,7 +7,7 @@ import os
 import pandas as pd
 
 
-def process_logements_data(input_file=None, output_file=None):
+def process_logements_data(input_file=None, output_file=None, years=None):
     """
     Traite le fichier CSV Types de Logements et produit une ligne par département par année.
 
@@ -21,9 +21,13 @@ def process_logements_data(input_file=None, output_file=None):
     Args:
         input_file: Chemin du fichier source (optionnel)
         output_file: Chemin du fichier de sortie (optionnel)
+        years: Liste des années à conserver (par défaut [2019, 2024])
     """
+    if years is None:
+        years = [2019, 2024]
+
     print("=" * 70)
-    print("🏘️  Traitement des types de logements (2019 & 2024)")
+    print(f"🏘️  Traitement des types de logements ({' & '.join(str(y) for y in years)})")
     print("=" * 70)
 
     if input_file is None:
@@ -45,9 +49,9 @@ def process_logements_data(input_file=None, output_file=None):
     print(f"   → {len(df)} lignes chargées")
     print(f"   → Années disponibles: {sorted(df['ANNEE'].unique())}")
 
-    # Filtrer uniquement 2019 et 2024
-    df = df[df['ANNEE'].isin([2019, 2024])].copy()
-    print(f"   → {len(df)} lignes après filtre 2019/2024")
+    # Filtrer uniquement les années demandées
+    df = df[df['ANNEE'].isin(years)].copy()
+    print(f"   → {len(df)} lignes après filtre {years}")
 
     # S'assurer que LOG_AUT est numérique
     df['LOG_AUT'] = pd.to_numeric(df['LOG_AUT'], errors='coerce').fillna(0)

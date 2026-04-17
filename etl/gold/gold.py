@@ -244,5 +244,147 @@ def process_gold_layer(output_file: str = None) -> pd.DataFrame | None:
     return base
 
 
+# ---------------------------------------------------------------------------
+# Gold 2014
+# ---------------------------------------------------------------------------
+
+def process_gold_2014_layer(output_file: str = None) -> pd.DataFrame | None:
+    """
+    Consolide les données 2014 disponibles en un seul DataFrame.
+
+    Sources utilisées (couche silver) :
+        - revenus_fiscaux_2014_par_departement.csv
+        - polices_municipaux_2014_par_departement.csv
+        - type_logements_2014_par_departement.csv
+        - naissances_2014_par_departement.csv
+        - crimes_delits_2014_par_departement.csv
+        - demandeurs_emplois_2014_par_departement.csv
+
+    Colonnes de sortie :
+        dep_code, dep_libelle, annee,
+        revenu_fiscal_moyen_par_foyer, pct_foyers_imposes, ratio_actifs_retraites,
+        nb_policiers_municipaux, naissances, nb_crimes_delits, nombre_demandeurs_emploi,
+        pct_individuel_pur, pct_individuel_groupe, pct_collectif, pct_residence
+    """
+    print("\n" + "=" * 70)
+    print("🥇 GOLD LAYER 2014 - Consolidation des données 2014")
+    print("=" * 70)
+
+    if output_file is None:
+        output_file = 'data/gold/departements_2014.csv'
+
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+    # ── 1. BASE : logements 2014 (fournit dep_code + dep_libelle) ─────────────
+    print("\n📐 Construction de la base (type_logements 2014)...")
+    lgt_file = 'data/silver/type_logements_2014_par_departement.csv'
+    if not os.path.exists(lgt_file):
+        print(f"❌ Fichier introuvable: {lgt_file}")
+        return None
+
+    base = _read(lgt_file)
+    base = base[base['annee'] == 2014].copy()
+    base['dep_code'] = base['dep_code'].astype(str).str.strip()
+    print(f"   → {len(base)} lignes de base ({base['dep_code'].nunique()} depts)")
+
+    # ── 2. REVENUS FISCAUX 2014 ───────────────────────────────────────────────
+    print("\n🔗 Jointure revenus fiscaux 2014...")
+    rev_file = 'data/silver/revenus_fiscaux_2014_par_departement.csv'
+    if os.path.exists(rev_file):
+        rev = _read(rev_file)
+        rev['dep_code'] = rev['dep'].apply(_normalize_impots_dep)
+        rev = rev[rev['dep_code'].notna()]
+        base = base.merge(
+            rev[['dep_code', 'pct_foyers_imposes',
+                 'revenu_fiscal_moyen_par_foyer', 'ratio_actifs_retraites']],
+            on='dep_code', how='left'
+        )
+    else:
+        print(f"   ⚠️  {rev_file} non trouvé — colonnes laissées vides")
+        for col in ('pct_foyers_imposes', 'revenu_fiscal_moyen_par_foyer', 'ratio_actifs_retraites'):
+            base[col] = float('nan')
+
+    # ── 3. POLICIERS MUNICIPAUX 2014 ──────────────────────────────────────────
+    print("🔗 Jointure policiers municipaux 2014...")
+    pol_file = 'data/silver/polices_municipaux_2014_par_departement.csv'
+    if os.path.exists(pol_file):
+        police = _read(pol_file)
+        police['dep_code'] = police['dep_code'].astype(str).str.strip()
+        base = base.merge(
+            police[['dep_code', 'nb_policiers_municipaux']],
+            on='dep_code', how='left'
+        )
+    else:
+        print(f"   ⚠️  {pol_file} non trouvé — colonne laissée vide")
+        base['nb_policiers_municipaux'] = float('nan')
+
+    # ── 4. NAISSANCES 2014 ───────────────────────────────────────────────────
+    print("🔗 Jointure naissances 2014...")
+    nais_file = 'data/silver/naissances_2014_par_departement.csv'
+    if os.path.exists(nais_file):
+        nais = _read(nais_file)
+        nais['dep_code'] = nais['dep_code'].astype(str).str.strip()
+        base = base.merge(
+            nais[['dep_code', 'naissances']],
+            on='dep_code', how='left'
+        )
+    else:
+        print(f"   ⚠️  {nais_file} non trouvé — colonne laissée vide")
+        base['naissances'] = float('nan')
+
+    # ── 5. CRIMES ET DÉLITS 2014 ──────────────────────────────────────────────
+    print("🔗 Jointure crimes et délits 2014...")
+    cri_file = 'data/silver/crimes_delits_2014_par_departement.csv'
+    if os.path.exists(cri_file):
+        cri = _read(cri_file)
+        cri['dep_code'] = cri['dep_code'].astype(str).str.strip()
+        base = base.merge(
+            cri[['dep_code', 'nb_crimes_delits']],
+            on='dep_code', how='left'
+        )
+    else:
+        print(f"   ⚠️  {cri_file} non trouvé — colonne laissée vide")
+        base['nb_crimes_delits'] = float('nan')
+
+    # ── 6. DEMANDEURS D’EMPLOI 2014 ──────────────────────────────────────────────
+    print("🔗 Jointure demandeurs d’emploi 2014...")
+    dmd_file = 'data/silver/demandeurs_emplois_2014_par_departement.csv'
+    if os.path.exists(dmd_file):
+        dmd = _read(dmd_file)
+        dmd['dep_code'] = dmd['dep_code'].astype(str).str.strip()
+        base = base.merge(
+            dmd[['dep_code', 'nombre_demandeurs_emploi']],
+            on='dep_code', how='left'
+        )
+    else:
+        print(f"   ⚠️  {dmd_file} non trouvé — colonne laissée vide")
+        base['nombre_demandeurs_emploi'] = float('nan')
+
+    # ── 7. RÉSUMÉ ─────────────────────────────────────────────────────────────
+    final_cols = [
+        'dep_code', 'dep_libelle', 'annee',
+        'revenu_fiscal_moyen_par_foyer', 'pct_foyers_imposes', 'ratio_actifs_retraites',
+        'nb_policiers_municipaux', 'naissances', 'nb_crimes_delits', 'nombre_demandeurs_emploi',
+        'pct_individuel_pur', 'pct_individuel_groupe', 'pct_collectif', 'pct_residence',
+    ]
+    base = base[[c for c in final_cols if c in base.columns]].copy()
+
+    print(f"\n📊 Résumé ({len(base)} lignes × {len(base.columns)} colonnes) :")
+    data_cols = [c for c in base.columns if c not in ('dep_code', 'dep_libelle', 'annee')]
+    for col in data_cols:
+        n_null = base[col].isna().sum()
+        coverage = round((1 - n_null / len(base)) * 100, 1)
+        flag = "✅" if n_null == 0 else ("⚠️ " if n_null <= 10 else "❌")
+        print(f"   {flag} {col:<45} {coverage:>5}% ({n_null} NaN)")
+
+    print(f"\n💾 Sauvegarde vers: {output_file}")
+    base.to_csv(output_file, sep=';', index=False, encoding='utf-8-sig')
+    print(f"   → {len(base)} lignes, {len(base.columns)} colonnes")
+
+    print("\n✅ Gold Layer 2014 terminé")
+    return base
+
+
 if __name__ == "__main__":
     process_gold_layer()
+    process_gold_2014_layer()

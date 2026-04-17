@@ -42,6 +42,19 @@ RAW_FILES = {
         "tranche_age_2024_raw.csv",
     "TYPE LOGEMENTS/Donnees-annuelles-departementales-Logements.2026-02.csv":
         "type_logements_raw.csv",
+    # ── 2014 ──────────────────────────────────────────────────────────────────
+    "DATA 2014/IMPOTS/ircom_communes_complet_revenus_2013.xlsx":
+        "revenus_fiscaux_2014_raw.xlsx",
+    "DATA 2014/POLICE MUNICIPAL/PM_enquete_2014_communes_ASVP.xlsx":
+        "polices_municipaux_2014_raw.xlsx",
+    "DATA 2014/TYPE LOGEMENTS/Donnees-annuelles-departementales-Logements.2026-02.csv":
+        "type_logements_2014_raw.csv",
+    "DATA 2014/NAISSANCE/DS_ETAT_CIVIL_NAIS_COMMUNES_data.csv":
+        "naissances_2014_raw.csv",
+    "DATA 2014/CRIME/crimes-et-delits-enregistres-par-les-services-de-gendarmerie-et-de-police-depuis-2012.xlsx":
+        "crimes_delits_2014_raw.xlsx",
+    "DATA 2014/DEMANDEUR EMPLOI/demandeur_emploi.csv":
+        "demandeurs_emplois_2014_raw.csv",
 }
 
 

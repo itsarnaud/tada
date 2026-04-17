@@ -1,12 +1,69 @@
 ﻿"""
 Script de traitement des effectifs de police municipale par département
 Sources : effectifs-police-municipale-2019-.ods  /  enquete-stats-pm-2024.ods
-Sortie   : une ligne par département par année (2019 & 2024)
-Colonnes : dep_libelle, dep_code, annee, pct_policiers_municipaux
+          PM_enquete_2014_communes_ASVP.xlsx
+Sortie   : une ligne par département par année (2019, 2024 et 2014)
+Colonnes : dep_libelle, dep_code, annee, pct_policiers_municipaux (2019/2024)
+           dep_libelle, dep_code, annee, nb_policiers_municipaux  (2014)
 """
 
 import os
+import re
 import pandas as pd
+
+_DEP_CODE_PATTERN_2014 = re.compile(r'\((\d{2,3}[AB]?)\)')
+
+# Les formats de libellés en col 0 du fichier 2014 sont très hétérogènes.
+# On essaie chaque pattern dans l'ordre (stop au 1er qui donne un code valide).
+_DEP_PATTERNS_2014 = [
+    # 1. "(01)" / "(2A)" / "(971)" – FORMAT A
+    re.compile(r'\((\d{2,3}[AB]?)\)', re.IGNORECASE),
+    # 2. Corse : "2-A" ou "2-B" seul dans la cellule
+    re.compile(r'^\s*2\s*[-–]\s*([AB])\s*$', re.IGNORECASE),
+    # 3. Code + tiret en début : "94- Val-de-Marne", "84-Avignon"
+    re.compile(r'^\s*(\d{2,3})\s*[-–]', re.IGNORECASE),
+    # 4. Code + espace + texte en début : "07 Ardèche", "62 Pas de Calais"
+    re.compile(r'^\s*(\d{2,3})\s+\w', re.IGNORECASE),
+    # 5. Code en fin de chaîne (après espace ou tiret) : "Aube 10", "Metz 57", "Seine- 75"
+    re.compile(r'[-–\s](\d{2,3})\s*$', re.IGNORECASE),
+    # 6. Nombre seul 3 chiffres (DOM : 971-976)
+    re.compile(r'^\s*(\d{3})\s*$', re.IGNORECASE),
+    # 7. Nombre seul 1-2 chiffres (codes 1-96 sans parenthèses, ex : "6")
+    re.compile(r'^\s*(\d{1,2})\s*$', re.IGNORECASE),
+]
+_VALID_DEP_INT = set(range(1, 97)) | set(range(971, 977))
+
+
+def _parse_dep_code_2014(raw: str) -> str | None:
+    """Convertit un code brut extrait (chaîne) en code département normalisé, ou None si invalide."""
+    raw = raw.strip().upper()
+    if raw in ('A', 'B'):           # Résultat du pattern Corse (group = 'A' ou 'B')
+        return '2' + raw
+    if raw in ('2A', '2B'):
+        return raw
+    try:
+        n = int(raw)
+        if n in _VALID_DEP_INT:
+            return f'{n:02d}' if n < 100 else str(n)
+    except ValueError:
+        pass
+    return None
+
+
+def _dep_libelle_from_section_2014(section: 'pd.DataFrame', dep_code: str) -> str:
+    """
+    Libellé = première valeur non-nulle de col 0 dans la section,
+    en retirant le code éventuellement embarqué.
+    """
+    first_val = next(
+        (str(r[0]).strip() for _, r in section.iterrows() if pd.notna(r[0]) and str(r[0]).strip()),
+        dep_code,
+    )
+    label = first_val
+    label = _DEP_CODE_PATTERN_2014.sub('', label)       # retire "(XX)"
+    label = re.sub(r'^\d{1,3}\s*[-–]?\s*', '', label)   # retire code en début
+    label = re.sub(r'\s*[-–]?\s*\d{1,3}\s*$', '', label) # retire code en fin
+    return label.strip().strip('\xa0').strip() or first_val.strip()
 
 
 # ---------------------------------------------------------------------------
@@ -146,8 +203,92 @@ def _extract_year(filepath: str, agents_col: int, year: int) -> pd.DataFrame:
     return result[['dep_libelle', 'dep_code', 'annee', 'nb_policiers_municipaux']].reset_index(drop=True)
 
 
+def _extract_year_2014(filepath: str) -> pd.DataFrame:
+    """
+    Charge le XLSX enquête police municipale 2014 et agrège par département.
+
+    Les lignes entièrement vides (cols 0-4 toutes NaN) séparent les sections.
+    Pour chaque section on scanne TOUTES les valeurs non-nulles de col 0 et on
+    applique successivement _DEP_PATTERNS_2014 jusqu'à trouver un code valide.
+
+    Formats reconnus (liste non exhaustive) :
+      "Ain (01)"           → parenthèses
+      "07 Ardèche"         → code en début
+      "Aube 10"            → code en fin
+      "94- Val-de-Marne"   → code + tiret en début
+      "84-Avignon"         → code + tiret + ville
+      "Seine- 75"          → nom + tiret + code en fin
+      "2-A" / "2-B"        → Corse
+      "6" (seul)           → nombre seul (metro)
+      "971" / "972" ...    → DOM
+      "Moselle" + "Metz57" → code dans la ligne suivante (préfecture + code)
+    """
+    df = pd.read_excel(filepath, sheet_name=0, header=None)
+    df_data = df.iloc[16:].reset_index(drop=True).copy()
+    df_data.columns = range(len(df_data.columns))
+
+    n_chk = min(5, len(df_data.columns))
+    blank_mask = df_data.iloc[:, :n_chk].isna().all(axis=1)
+
+    # Découpe en sections contigues non-vides
+    sections: list[tuple[int, int]] = []
+    i = 0
+    while i < len(df_data):
+        if not blank_mask.iloc[i]:
+            j = i + 1
+            while j < len(df_data) and not blank_mask.iloc[j]:
+                j += 1
+            sections.append((i, j))
+            i = j
+        else:
+            i += 1
+
+    records: dict[str, dict] = {}   # dep_code → record (pour dédupliquer)
+
+    for s, e in sections:
+        section = df_data.iloc[s:e]
+        dep_code: str | None = None
+
+        # Essayer tous les patterns sur chaque valeur non-nulle de col 0
+        for _, row in section.iterrows():
+            val0 = str(row[0]).strip() if pd.notna(row[0]) else ''
+            if not val0:
+                continue
+            for pat in _DEP_PATTERNS_2014:
+                m = pat.search(val0)
+                if not m:
+                    continue
+                raw = m.group(1)
+                code = _parse_dep_code_2014(raw)
+                if code:
+                    dep_code = code
+                    break
+            if dep_code:
+                break
+
+        if dep_code is None:
+            continue  # Section sans code valide (totaux, commentaires, etc.)
+
+        nb_pm = int(section.iloc[:, 2].apply(pd.to_numeric, errors='coerce').fillna(0).sum())
+        dep_libelle = _dep_libelle_from_section_2014(section, dep_code)
+
+        if dep_code in records:
+            # Doublon (ex : Mayotte apparaît 2 fois) → on cumule
+            records[dep_code]['nb_policiers_municipaux'] += nb_pm
+        else:
+            records[dep_code] = {
+                'dep_libelle': dep_libelle,
+                'dep_code':    dep_code,
+                'annee':       2014,
+                'nb_policiers_municipaux': nb_pm,
+            }
+
+    df_out = pd.DataFrame(records.values()).sort_values('dep_code').reset_index(drop=True)
+    return df_out
+
+
 # ---------------------------------------------------------------------------
-# Fonction principale
+# Fonctions principales
 # ---------------------------------------------------------------------------
 
 def process_polices_municipaux_data(
@@ -257,5 +398,52 @@ def process_polices_municipaux_data(
     return df_final
 
 
+def process_polices_municipaux_2014_data(
+    input_file: str = None,
+    output_file: str = None,
+) -> pd.DataFrame | None:
+    """
+    Traite le fichier XLSX enquête police municipale 2014.
+
+    Colonnes de sortie :
+        dep_libelle | dep_code | annee | nb_policiers_municipaux
+
+    Le % sera calculé en gold layer quand la population 2014 sera disponible.
+
+    Args:
+        input_file  : Chemin du fichier XLSX (optionnel)
+        output_file : Chemin du fichier CSV de sortie (optionnel)
+    """
+    print("=" * 70)
+    print("👮 Traitement des effectifs de police municipale 2014")
+    print("=" * 70)
+
+    if input_file is None:
+        input_file = 'data/raw/DATA 2014/POLICE MUNICIPAL/PM_enquete_2014_communes_ASVP.xlsx'
+    if output_file is None:
+        output_file = 'data/silver/polices_municipaux_2014_par_departement.csv'
+
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+    if not os.path.exists(input_file):
+        print(f"⚠️  Fichier non trouvé: {input_file}")
+        return None
+
+    print(f"\n📥 Chargement du fichier: {input_file}")
+    df_final = _extract_year_2014(input_file)
+    print(f"   → {len(df_final)} départements agrégés")
+
+    print(f"\n💾 Sauvegarde vers: {output_file}")
+    df_final.to_csv(output_file, sep=';', index=False, encoding='utf-8-sig')
+    print(f"   → {len(df_final)} lignes exportées")
+
+    print("\n📊 Aperçu des premières lignes:")
+    print(df_final.head(10).to_string(index=False))
+
+    print("\n✅ Traitement des effectifs de police municipale 2014 terminé")
+    return df_final
+
+
 if __name__ == "__main__":
     process_polices_municipaux_data()
+    process_polices_municipaux_2014_data()

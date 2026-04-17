@@ -1,9 +1,8 @@
 ﻿"""
-Silver Layer - Nettoyage et standardisation des donnÃ©es brutes
-Traite tous les datasets sources et les dÃ©pose dans data/silver/
+Silver Layer - Nettoyage et standardisation des donnees brutes
+Traite tous les datasets sources et les depose dans data/silver/
 """
 
-import pandas as pd
 import os
 import sys
 
@@ -12,149 +11,161 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from etl.silver.script_clean.process_elections import process_elections_data
 from etl.silver.script_clean.process_trage import process_trage_data
 from etl.silver.script_clean.process_impots import process_impots_data
-from etl.silver.script_clean.process_dmd_emplois import process_dmd_emplois_data
+from etl.silver.script_clean.process_dmd_emplois import process_dmd_emplois_data, process_dmd_emplois_2014_data
 from etl.silver.script_clean.process_rsa import process_rsa_data
 from etl.silver.script_clean.process_logements import process_logements_data
-from etl.silver.script_clean.process_naissances import process_naissances_data
-from etl.silver.script_clean.process_polices_municipaux import process_polices_municipaux_data
-from etl.silver.script_clean.process_crimes import process_crimes
+from etl.silver.script_clean.process_naissances import process_naissances_data, process_naissances_2014_data
+from etl.silver.script_clean.process_polices_municipaux import process_polices_municipaux_data, process_polices_municipaux_2014_data
+from etl.silver.script_clean.process_crimes import process_crimes, process_crimes_2014_data
 
 
 def process_all_datasets():
-    """
-    Orchestre le traitement de tous les datasets sources
-    et les dÃ©pose dans la couche silver
-    """
+    """Orchestre le traitement de tous les datasets sources."""
     print("\n" + "=" * 70)
-    print("ðŸ¥ˆ SILVER LAYER - Nettoyage et standardisation des donnÃ©es")
+    print("SILVER LAYER - Nettoyage et standardisation des donnees")
     print("=" * 70)
 
     datasets_processed = []
 
-    # Traiter les Ã©lections 2024
-    try:
-        print("\nðŸ“¥ Appel du script: process_elections.py (annÃ©e 2024)")
-        df_elections_2024 = process_elections_data(year=2024)
-        if df_elections_2024 is not None:
-            datasets_processed.append('elections_2024')
-    except Exception as e:
-        print(f"âŒ Erreur lors du traitement des Ã©lections 2024: {e}")
+    # --- Elections ---
+    for year in [2024, 2019]:
+        try:
+            print(f"\n[INFO] process_elections.py (annee {year})")
+            df = process_elections_data(year=year)
+            if df is not None:
+                datasets_processed.append(f"elections_{year}")
+        except Exception as e:
+            print(f"[ERREUR] elections {year}: {e}")
 
-    # Traiter les Ã©lections 2019
-    try:
-        print("\nðŸ“¥ Appel du script: process_elections.py (annÃ©e 2019)")
-        df_elections_2019 = process_elections_data(year=2019)
-        if df_elections_2019 is not None:
-            datasets_processed.append('elections_2019')
-    except Exception as e:
-        print(f"âŒ Erreur lors du traitement des Ã©lections 2019: {e}")
+    # --- Tranches age ---
+    for year in [2019, 2024]:
+        try:
+            print(f"\n[INFO] process_trage.py (annee {year})")
+            df = process_trage_data(year=year)
+            if df is not None:
+                datasets_processed.append(f"tranche_age_{year}")
+        except Exception as e:
+            print(f"[ERREUR] tranche age {year}: {e}")
 
-    # Traiter tranches d'Ã¢ge 2019
-    try:
-        print("\nðŸ“¥ Appel du script: process_trage.py (annÃ©e 2019)")
-        df_trage_2019 = process_trage_data(year=2019)
-        if df_trage_2019 is not None:
-            datasets_processed.append('tranche_age_2019')
-    except Exception as e:
-        print(f"âŒ Erreur lors du traitement tranches d'Ã¢ge 2019: {e}")
+    # --- Revenus fiscaux 2019 / 2024 / 2014 ---
+    for year in [2019, 2024, 2014]:
+        try:
+            print(f"\n[INFO] process_impots.py (annee {year})")
+            df = process_impots_data(year=year)
+            if df is not None:
+                datasets_processed.append(f"revenus_fiscaux_{year}")
+        except Exception as e:
+            print(f"[ERREUR] revenus fiscaux {year}: {e}")
 
-    # Traiter tranches d'Ã¢ge 2024
+    # --- Demandeurs emploi ---
     try:
-        print("\nðŸ“¥ Appel du script: process_trage.py (annÃ©e 2024)")
-        df_trage_2024 = process_trage_data(year=2024)
-        if df_trage_2024 is not None:
-            datasets_processed.append('tranche_age_2024')
+        print("\n[INFO] process_dmd_emplois.py")
+        df = process_dmd_emplois_data()
+        if df is not None:
+            datasets_processed.append("demandeurs_emplois")
     except Exception as e:
-        print(f"âŒ Erreur lors du traitement tranches d'Ã¢ge 2024: {e}")
+        print(f"[ERREUR] demandeurs emplois: {e}")
 
-    # Traiter revenus fiscaux 2019
+    # --- Demandeurs emploi 2014 ---
     try:
-        print("\nðŸ“¥ Appel du script: process_impots.py (annÃ©e 2019)")
-        df_impots_2019 = process_impots_data(year=2019)
-        if df_impots_2019 is not None:
-            datasets_processed.append('revenus_fiscaux_2019')
+        print("\n[INFO] process_dmd_emplois.py (annee 2014)")
+        df = process_dmd_emplois_2014_data()
+        if df is not None:
+            datasets_processed.append("demandeurs_emplois_2014")
     except Exception as e:
-        print(f"âŒ Erreur lors du traitement revenus fiscaux 2019: {e}")
+        print(f"[ERREUR] demandeurs emplois 2014: {e}")
 
-    # Traiter revenus fiscaux 2024
-    try:
-        print("\nðŸ“¥ Appel du script: process_impots.py (annÃ©e 2024)")
-        df_impots_2024 = process_impots_data(year=2024)
-        if df_impots_2024 is not None:
-            datasets_processed.append('revenus_fiscaux_2024')
-    except Exception as e:
-        print(f"âŒ Erreur lors du traitement revenus fiscaux 2024: {e}")
+    # --- RSA ---
+    for year in [2020, 2024]:
+        try:
+            print(f"\n[INFO] process_rsa.py (annee {year})")
+            df = process_rsa_data(year=year)
+            if df is not None:
+                datasets_processed.append(f"rsa_{year}")
+        except Exception as e:
+            print(f"[ERREUR] RSA {year}: {e}")
 
-    # Traiter demandeurs d'emplois
+    # --- Logements 2019 & 2024 ---
     try:
-        print("\nðŸ“¥ Appel du script: process_dmd_emplois.py")
-        df_dmd_emplois = process_dmd_emplois_data()
-        if df_dmd_emplois is not None:
-            datasets_processed.append('demandeurs_emplois')
+        print("\n[INFO] process_logements.py (annees 2019 & 2024)")
+        df = process_logements_data()
+        if df is not None:
+            datasets_processed.append("type_logements")
     except Exception as e:
-        print(f"âŒ Erreur lors du traitement demandeurs d'emplois: {e}")
+        print(f"[ERREUR] logements: {e}")
 
-    # Traiter RSA 2020
+    # --- Logements 2014 ---
     try:
-        print("\nðŸ“¥ Appel du script: process_rsa.py (annÃ©e 2020)")
-        df_rsa_2020 = process_rsa_data(year=2020)
-        if df_rsa_2020 is not None:
-            datasets_processed.append('rsa_2020')
+        print("\n[INFO] process_logements.py (annee 2014)")
+        df = process_logements_data(
+            input_file="data/raw/DATA 2014/TYPE LOGEMENTS/Donnees-annuelles-departementales-Logements.2026-02.csv",
+            output_file="data/silver/type_logements_2014_par_departement.csv",
+            years=[2014],
+        )
+        if df is not None:
+            datasets_processed.append("type_logements_2014")
     except Exception as e:
-        print(f"âŒ Erreur lors du traitement RSA 2020: {e}")
+        print(f"[ERREUR] logements 2014: {e}")
 
-    # Traiter RSA 2024
+    # --- Naissances ---
     try:
-        print("\nðŸ“¥ Appel du script: process_rsa.py (annÃ©e 2024)")
-        df_rsa_2024 = process_rsa_data(year=2024)
-        if df_rsa_2024 is not None:
-            datasets_processed.append('rsa_2024')
+        print("\n[INFO] process_naissances.py")
+        df = process_naissances_data()
+        if df is not None:
+            datasets_processed.append("naissances")
     except Exception as e:
-        print(f"âŒ Erreur lors du traitement RSA 2024: {e}")
+        print(f"[ERREUR] naissances: {e}")
 
-    # Traiter les types de logements 2019 & 2024
+    # --- Naissances 2014 ---
     try:
-        print("\nðŸ“¥ Appel du script: process_logements.py (annÃ©es 2019 & 2024)")
-        df_logements = process_logements_data()
-        if df_logements is not None:
-            datasets_processed.append('type_logements')
+        print("\n[INFO] process_naissances.py (annee 2014)")
+        df = process_naissances_2014_data()
+        if df is not None:
+            datasets_processed.append("naissances_2014")
     except Exception as e:
-        print(f"âŒ Erreur lors du traitement des types de logements: {e}")
+        print(f"[ERREUR] naissances 2014: {e}")
 
-    # Traiter les naissances 2019 & 2024
+    # --- Police municipale 2019 & 2024 ---
     try:
-        print("\nðŸ“¥ Appel du script: process_naissances.py (annÃ©es 2019 & 2024)")
-        df_naissances = process_naissances_data()
-        if df_naissances is not None:
-            datasets_processed.append('naissances')
+        print("\n[INFO] process_polices_municipaux.py (annees 2019 & 2024)")
+        df = process_polices_municipaux_data()
+        if df is not None:
+            datasets_processed.append("polices_municipaux")
     except Exception as e:
-        print(f"âŒ Erreur lors du traitement des naissances: {e}")
+        print(f"[ERREUR] police municipale: {e}")
 
-    # Traiter les effectifs de police municipale 2019 & 2024
+    # --- Police municipale 2014 ---
     try:
-        print("\nðŸ“¥ Appel du script: process_polices_municipaux.py (annÃ©es 2019 & 2024)")
-        df_polices = process_polices_municipaux_data()
-        if df_polices is not None:
-            datasets_processed.append('polices_municipaux')
+        print("\n[INFO] process_polices_municipaux.py (annee 2014)")
+        df = process_polices_municipaux_2014_data()
+        if df is not None:
+            datasets_processed.append("polices_municipaux_2014")
     except Exception as e:
-        print(f"âŒ Erreur lors du traitement des polices municipaux: {e}")
+        print(f"[ERREUR] police municipale 2014: {e}")
 
-    # Traiter les crimes et dÃ©lits
+    # --- Crimes et delits ---
     try:
-        print("\nðŸ“¥ Appel du script: process_crimes.py")
-        df_crimes = process_crimes()
-        if df_crimes is not None:
-            datasets_processed.append('crimes_delits')
+        print("\n[INFO] process_crimes.py")
+        df = process_crimes()
+        if df is not None:
+            datasets_processed.append("crimes_delits")
     except Exception as e:
-        print(f"âŒ Erreur lors du traitement des crimes et dÃ©lits: {e}")
+        print(f"[ERREUR] crimes et delits: {e}")
+
+    # --- Crimes et delits 2014 ---
+    try:
+        print("\n[INFO] process_crimes.py (annee 2014)")
+        df = process_crimes_2014_data()
+        if df is not None:
+            datasets_processed.append("crimes_delits_2014")
+    except Exception as e:
+        print(f"[ERREUR] crimes et delits 2014: {e}")
 
     print("\n" + "=" * 70)
-    print(f"âœ… Silver Layer terminÃ© - {len(datasets_processed)} dataset(s) traitÃ©(s)")
+    print(f"Silver Layer termine - {len(datasets_processed)} dataset(s) traite(s)")
     print("=" * 70)
-
     return datasets_processed
 
 
 if __name__ == "__main__":
     process_all_datasets()
-

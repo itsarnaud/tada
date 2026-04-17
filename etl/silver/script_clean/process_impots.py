@@ -24,7 +24,10 @@ def process_impots_data(year=2019, input_file=None, output_file=None):
     print("=" * 70)
 
     if input_file is None:
-        input_file = f'data/raw/IMPOTS/ircom_communes_complet_revenus_{year}.xlsx'
+        if year == 2014:
+            input_file = 'data/raw/DATA 2014/IMPOTS/ircom_communes_complet_revenus_2013.xlsx'
+        else:
+            input_file = f'data/raw/IMPOTS/ircom_communes_complet_revenus_{year}.xlsx'
 
     if output_file is None:
         output_file = f'data/silver/revenus_fiscaux_{year}_par_departement.csv'
@@ -38,8 +41,8 @@ def process_impots_data(year=2019, input_file=None, output_file=None):
     print(f"\n📥 Chargement du fichier: {input_file}")
     
     # Structure différente selon l'année
-    if year == 2019:
-        # 2019: skiprows=5, colonnes avec header=None
+    if year in (2014, 2019):
+        # 2014 & 2019: skiprows=5, colonnes avec header=None
         df = pd.read_excel(input_file, skiprows=5, header=None)
         df.columns = [
             'unused', 'dep', 'commune', 'libelle_commune', 'tranche',
@@ -48,7 +51,7 @@ def process_impots_data(year=2019, input_file=None, output_file=None):
             'nb_foyers_traitement_salaire', 'montant_traitement_salaire',
             'nb_foyers_retraite_pension', 'montant_retraite_pension'
         ]
-        tranche_filter = 'TOTAL '
+        tranche_filter = 'TOTAL' if year == 2019 else 'Total'
     else:  # 2024
         # 2024: skiprows=5, avec header=0
         df = pd.read_excel(input_file, skiprows=5, header=0)
@@ -64,7 +67,7 @@ def process_impots_data(year=2019, input_file=None, output_file=None):
     print(f"   → {len(df)} lignes chargées")
     
     # Filtrer uniquement les lignes TOTAL (pas les tranches)
-    df_total = df[df['tranche'].astype(str).str.strip() == tranche_filter.strip()].copy()
+    df_total = df[df['tranche'].astype(str).str.strip().str.upper() == tranche_filter.upper()].copy()
     print(f"   → {len(df_total)} lignes avec TOTAL (pas de tranches)")
     
     # Nettoyer la colonne département (enlever espaces)
