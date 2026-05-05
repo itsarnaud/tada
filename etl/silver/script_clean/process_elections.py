@@ -7,50 +7,118 @@ import pandas as pd
 import os
 
 
-# Partis classés à droite (Libellé Etendu Liste exact du fichier XLS 2019)
-DROITE_PARTIES_2019 = {
-    'ALLIANCE JAUNE, LA RÉVOLTE PAR LE VOTE',
-    'ALLONS ENFANTS',
-    'DÉMOCRATIE REPRÉSENTATIVE',
-    "ENSEMBLE PATRIOTES ET GILETS JAUNES : POUR LA FRANCE, SORTONS DE L'UNION EUROPÉENNE !",
-    'ENSEMBLE POUR LE FREXIT',
-    'LA LIGNE CLAIRE',
-    'LE COURAGE DE DÉFENDRE LES FRANÇAIS AVEC NICOLAS DUPONT-AIGNAN. DEBOUT LA FRANCE ! - CNIP',
-    'LES EUROPÉENS',
-    "LES OUBLIÉS DE L'EUROPE - ARTISANS, COMMERÇANTS, PROFESSIONS LIBÉRALES ET INDÉPENDANTS - ACPLI -",
-    'LISTE DE LA RECONQUÊTE',
-    "MOUVEMENT POUR L'INITIATIVE CITOYENNE",
-    'NEUTRE ET ACTIF',
-    'PACE - PARTI DES CITOYENS EUROPÉENS',
-    'PARTI FÉDÉRALISTE EUROPÉEN - POUR UNE EUROPE QUI PROTÈGE SES CITOYENS',
-    'PRENEZ LE POUVOIR, LISTE SOUTENUE PAR MARINE LE PEN',
-    'RENAISSANCE SOUTENUE PAR LA RÉPUBLIQUE EN MARCHE, LE MODEM ET SES PARTENAIRES',
-    'UDLEF (UNION DÉMOCRATIQUE POUR LA LIBERTÉ ÉGALITÉ FRATERNITÉ)',
-    'UNE EUROPE AU SERVICE DES PEUPLES',
-    "UNE FRANCE ROYALE AU COEUR DE L'EUROPE",
-    'UNION DE LA DROITE ET DU CENTRE',
+# Classement politique des listes 2024 par numéro de liste (1-38)
+MAPPING_BORDS_2024 = {
+    1:  'EXTREME DROITE',  # Humanité Souveraine (Souverainiste)
+    2:  'CENTRE',          # Pour une démocratie réelle (Citoyen)
+    3:  'EXTREME DROITE',  # La France Fière (Reconquête)
+    4:  'GAUCHE',          # La France Insoumise (LFI)
+    5:  'EXTREME DROITE',  # La France Revient (RN)
+    6:  'GAUCHE',          # Europe Écologie (EELV)
+    7:  'EXTREME GAUCHE',  # Free Palestine
+    8:  'GAUCHE',          # Parti Animaliste
+    9:  'EXTREME GAUCHE',  # Parti Révolutionnaire Communistes
+    10: 'CENTRE',          # Parti Pirate
+    11: 'CENTRE',          # Besoin d'Europe (Renaissance/Majorité)
+    12: 'CENTRE',          # PACE
+    13: 'CENTRE',          # Équinoxe
+    14: 'CENTRE',          # Écologie Positive et Territoires
+    15: 'EXTREME DROITE',  # Liste Asselineau-Frexit
+    16: 'EXTREME GAUCHE',  # Paix et Décroissance
+    17: 'GAUCHE',          # Pour une autre Europe
+    18: 'DROITE',          # La Droite (LR)
+    19: 'EXTREME GAUCHE',  # Lutte Ouvrière
+    20: 'GAUCHE',          # Changer l'Europe (Nouvelle Donne)
+    21: 'GAUCHE',          # Nous le Peuple
+    22: 'EXTREME GAUCHE',  # Urgence Révolution !
+    23: 'EXTREME GAUCHE',  # PPL (Parti des Travailleurs)
+    24: 'EXTREME DROITE',  # L'Europe ça suffit (Les Patriotes)
+    25: 'EXTREME DROITE',  # Non ! Prenons-nous en mains
+    26: 'EXTREME DROITE',  # Forteresse Europe
+    27: 'GAUCHE',          # Réveiller l'Europe (PS - Place Publique)
+    28: 'EXTREME GAUCHE',  # Non à l'UE et à l'Otan (PRCF)
+    29: 'DROITE',          # Alliance Rurale (Jean Lassalle)
+    30: 'EXTREME DROITE',  # France Libre
+    31: 'GAUCHE',          # Europe Territoires Écologie (PRG)
+    32: 'CENTRE',          # La Ruche Citoyenne
+    33: 'GAUCHE',          # Gauche Unie (PCF)
+    34: 'DROITE',          # Défendre les enfants
+    35: 'CENTRE',          # Écologie au Centre
+    36: 'CENTRE',          # Démocratie Représentative
+    37: 'CENTRE',          # Espéranto
+    38: 'DROITE',          # Liberté Démocratique Française
 }
 
 
-DROITE_PARTIES_2024 = {
-    'AR',
-    "BESOIN D'EUROPE",
-    'DEFENDRE LES ENFANTS',
-    'DEMOCRATIE REPRESENTATIVE',
-    'FORTERESSE EUROPE',
-    'FRANCE LIBRE',
-    'HUMANITE SOUVERAINE',
-    "L'EUROPE CA SUFFIT !",
-    'LA DROITE POUR FAIRE ENTENDRE LA VOIX DE LA FRANCE EN EUROPE',
-    'LA FRANCE FIERE, MENEE PAR MARION MARECHAL ET SOUTENUE PAR ÉRIC ZEMMOUR',
-    'LIBERTÉ DÉMOCRATIQUE FRANÇAISE',
-    'LISTE ASSELINEAU-FREXIT',
-    'La FRANCE REVIENT',
-    'NLP',
-    'PACE',
-    'POUR UNE AUTRE EUROPE',
-    'POUR UNE DEMOCRATIE REELLE : DECIDONS NOUS-MEMES !',
-    'PRENONS-NOUS EN MAIN',
+BORD_MAP_2019 = {
+    # --- EXTRÊME GAUCHE ---
+    'LUTTE OUVRIÈRE': 'EXTREME GAUCHE',
+    'RÉVOLUTIONNAIRE': 'EXTREME GAUCHE',
+    'DÉCROISSANCE 2019': 'EXTREME GAUCHE',
+
+    # --- GAUCHE ---
+    'LA FRANCE INSOUMISE': 'GAUCHE',
+    "POUR L'EUROPE DES GENS": 'GAUCHE',
+    'LISTE CITOYENNE': 'GAUCHE',
+    "ENVIE D'EUROPE": 'GAUCHE',
+    'EUROPE ÉCOLOGIE': 'GAUCHE',
+    'URGENCE ÉCOLOGIE': 'GAUCHE',
+
+    # --- CENTRE ---
+    'RENAISSANCE': 'CENTRE',
+    'LES EUROPÉENS': 'CENTRE',
+    'PARTI PIRATE': 'CENTRE',
+    'PARTI ANIMALISTE': 'CENTRE',
+    'ALLIANCE JAUNE': 'CENTRE',
+    'ÉVOLUTION CITOYENNE': 'CENTRE',
+    'DÉMOCRATIE REPRÉSENTATIVE': 'CENTRE',
+    'PACE': 'CENTRE',
+    'PARTI FED. EUROPÉEN': 'CENTRE',
+    'INITIATIVE CITOYENNE': 'CENTRE',
+    'ALLONS ENFANTS': 'CENTRE',
+    'À VOIX ÉGALES': 'CENTRE',
+    'NEUTRE ET ACTIF': 'CENTRE',
+    'ESPERANTO': 'CENTRE',
+    "LES OUBLIES DE L'EUROPE": 'CENTRE',
+    'UDLEF': 'CENTRE',
+    'EUROPE AU SERVICE PEUPLES': 'CENTRE',
+
+    # --- DROITE ---
+    'UNION DROITE-CENTRE': 'DROITE',
+
+    # --- EXTRÊME DROITE ---
+    'PRENEZ LE POUVOIR': 'EXTREME DROITE',
+    'DEBOUT LA FRANCE': 'EXTREME DROITE',
+    'ENSEMBLE PATRIOTES': 'EXTREME DROITE',
+    'ENSEMBLE POUR LE FREXIT': 'EXTREME DROITE',
+    'LA LIGNE CLAIRE': 'EXTREME DROITE',
+    'UNE FRANCE ROYALE': 'EXTREME DROITE',
+    'LISTE DE LA RECONQUÊTE': 'EXTREME DROITE',
+}
+
+
+BORD_MAP_2014 = {
+    # --- EXTRÊME GAUCHE ---
+    'Liste Extrême gauche': 'EXTREME GAUCHE',
+
+    # --- GAUCHE ---
+    'Liste Front de Gauche': 'GAUCHE',
+    'Liste Union de la Gauche': 'GAUCHE',
+    'Liste Europe-Ecologie-Les Verts': 'GAUCHE',
+    'Liste Divers gauche': 'GAUCHE',
+
+    # --- CENTRE ---
+    'Liste Union du Centre': 'CENTRE',
+    'Liste Divers': 'CENTRE',
+
+    # --- DROITE ---
+    'Liste Union de la Droite': 'DROITE',
+    'Liste Union pour un Mouvement Populaire': 'DROITE',  # UMP (nom dans ce fichier)
+    'Liste Divers droite': 'DROITE',
+
+    # --- EXTRÊME DROITE ---
+    'Liste Front National': 'EXTREME DROITE',
+    'Liste Extrême droite': 'EXTREME DROITE',
 }
 
 
@@ -78,12 +146,12 @@ def process_elections_data(year=2024, input_file=None, output_file=None):
     - Année
     
     Args:
-        year: Année des élections (2019 ou 2024)
+        year: Année des élections (2014, 2019 ou 2024)
         input_file: Chemin du fichier source (optionnel)
         output_file: Chemin du fichier de sortie (optionnel)
     """
     print("=" * 70)
-    print(f"🗳️  Traitement des résultats électoraux {year}")
+    print(f"[ELECTIONS] Traitement des resultats electoraux {year}")
     print("=" * 70)
     
     # Chemins par défaut
@@ -92,6 +160,8 @@ def process_elections_data(year=2024, input_file=None, output_file=None):
             input_file = 'data/raw/ELECTIONS/resultats-definitifs-par-departement_2024.xlsx'
         elif year == 2019:
             input_file = 'data/raw/ELECTIONS/resultats-definitifs-par-departement_2019.xls'
+        elif year == 2014:
+            input_file = 'data/raw/DATA 2014/ELECTION/euro-2014-resultats-communes-c (1).xlsx'
         else:
             raise ValueError(f"Année non supportée: {year}")
     
@@ -103,18 +173,18 @@ def process_elections_data(year=2024, input_file=None, output_file=None):
     
     # Vérifier si le fichier existe
     if not os.path.exists(input_file):
-        print(f"⚠️  Fichier non trouvé: {input_file}")
+        print(f"[WARN] Fichier non trouve: {input_file}")
         return None
     
-    print(f"\n📥 Chargement du fichier: {input_file}")
+    print(f"\nChargement du fichier: {input_file}")
     df = pd.read_excel(input_file)
-    print(f"   → {len(df)} départements chargés")
-    print(f"   → {len(df.columns)} colonnes trouvées")
+    print(f"   -> {len(df)} lignes chargees")
+    print(f"   -> {len(df.columns)} colonnes trouvees")
     
     # Liste pour stocker les résultats
     results = []
     
-    print(f"\n🔍 Analyse de chaque département...")
+    print(f"\nAnalyse de chaque departement...")
     
     # Adapter les noms de colonnes selon l'année
     if year == 2019:
@@ -130,45 +200,151 @@ def process_elections_data(year=2024, input_file=None, output_file=None):
             
             max_pct = -1
             best_liste = None
-            sum_pct_droite = 0.0
+            best_bord = None
+            pct_par_bord = {}
             
             # Première liste (colonnes nommées, positions 16-22)
             # offset+0: N°Liste, +1: Libellé Abrégé, +2: Libellé Étendu, +3: Nom Tête, +4: Voix, +5: % Voix/Ins, +6: % Voix/Exp
             pct = row['% Voix/Exp']
-            libelle_etendu = row['Libellé Etendu Liste']
+            libelle_abrege = row['Libellé Abrégé Liste']
+            bord = BORD_MAP_2019.get(str(libelle_abrege), None) if pd.notna(libelle_abrege) else None
             if pd.notna(pct) and pct > max_pct:
                 max_pct = pct
-                best_liste = row['Libellé Abrégé Liste']
-            if pd.notna(libelle_etendu) and str(libelle_etendu) in DROITE_PARTIES_2019 and pd.notna(pct):
-                sum_pct_droite += float(pct)
+                best_liste = libelle_abrege
+                best_bord = bord
+            if bord and pd.notna(pct):
+                pct_par_bord[bord] = pct_par_bord.get(bord, 0.0) + float(pct)
             
             # Listes suivantes (colonnes Unnamed, cycle de 7 à partir de la position 23)
             for start_col in range(23, len(df.columns), 7):
                 pct_col_idx = start_col + 6      # % Voix/Exp est à la position +6 dans le cycle
-                etendu_col_idx = start_col + 2   # Libellé Étendu est à la position +2 dans le cycle
+                abrege_col_idx = start_col + 1   # Libellé Abrégé est à la position +1 dans le cycle
                 if pct_col_idx < len(df.columns):
                     pct = row.iloc[pct_col_idx]
-                    libelle_etendu = row.iloc[etendu_col_idx]
+                    libelle_abrege = row.iloc[abrege_col_idx]
+                    bord = BORD_MAP_2019.get(str(libelle_abrege), None) if pd.notna(libelle_abrege) else None
                     if pd.notna(pct) and pct > max_pct:
                         max_pct = pct
-                        liste_col_idx = start_col + 1  # Libellé Abrégé est à la position +1
-                        best_liste = row.iloc[liste_col_idx]
-                    if pd.notna(libelle_etendu) and str(libelle_etendu) in DROITE_PARTIES_2019 and pd.notna(pct):
-                        sum_pct_droite += float(pct)
+                        best_liste = libelle_abrege
+                        best_bord = bord
+                    if bord and pd.notna(pct):
+                        pct_par_bord[bord] = pct_par_bord.get(bord, 0.0) + float(pct)
             
             results.append({
                 'code_departement': code_dept,
                 'libelle_departement': libelle_dept,
                 'nuance_liste': None,  # Pas de nuance dans le fichier 2019
                 'libelle_abrege_liste': best_liste,
+                'bord_liste_gagnante': best_bord,
                 'pct_voix_exprimes': max_pct,
-                '% vote droite': round(sum_pct_droite, 2),
-                '% vote gauche': round((_parse_percent(row['% Exp/Vot']) or 0.0) - sum_pct_droite, 2),
+                '% vote extreme gauche': round(pct_par_bord.get('EXTREME GAUCHE', 0.0), 2),
+                '% vote gauche': round(pct_par_bord.get('GAUCHE', 0.0), 2),
+                '% vote centre': round(pct_par_bord.get('CENTRE', 0.0), 2),
+                '% vote droite': round(pct_par_bord.get('DROITE', 0.0), 2),
+                '% vote extreme droite': round(pct_par_bord.get('EXTREME DROITE', 0.0), 2),
                 'annee': year
             })
             
-            print(f"   {code_dept:3} - {libelle_dept:30} → {best_liste} - {max_pct:.2f}%")
-        
+            print(f"   {code_dept:3} - {libelle_dept:30} -> {best_liste} - {max_pct:.2f}%")
+
+    elif year == 2014:
+        # Format par commune (une ligne = une commune), largeur variable avec suffixes .1, .2...
+        # On agrège les voix par département puis on calcule les % sur le total d'exprimés.
+        col_code_dept   = 'Code du département'
+        col_libelle_dept = 'Libellé du département'
+        col_exprimes    = 'Exprimés'
+
+        # ── 1. Totaux exprimés par département ──────────────────────────────────
+        dept_info = (
+            df.groupby(col_code_dept)[col_exprimes]
+            .sum()
+            .reset_index()
+            .rename(columns={col_code_dept: 'code_dept', col_exprimes: 'total_exprimes'})
+        )
+        dept_libelle = (
+            df[[col_code_dept, col_libelle_dept]]
+            .drop_duplicates(col_code_dept)
+            .rename(columns={col_code_dept: 'code_dept', col_libelle_dept: 'libelle_dept'})
+        )
+        dept_info = dept_info.merge(dept_libelle, on='code_dept')
+
+        # ── 2. Dépiler toutes les listes (format large → long) ───────────────────
+        records = []
+
+        # Première liste : colonnes sans suffixe
+        sub = df[[col_code_dept, 'Libellé Abrégé Liste', 'Voix']].copy()
+        sub.columns = ['code_dept', 'abrege', 'voix']
+        records.append(sub.dropna(subset=['voix']))
+
+        # Listes suivantes : colonnes avec suffixe .1, .2, ...
+        suffix = 1
+        while f'Voix.{suffix}' in df.columns:
+            sub = df[[col_code_dept,
+                       f'Libellé Abrégé Liste.{suffix}',
+                       f'Voix.{suffix}']].copy()
+            sub.columns = ['code_dept', 'abrege', 'voix']
+            records.append(sub.dropna(subset=['voix']))
+            suffix += 1
+
+        votes_long = pd.concat(records, ignore_index=True)
+        votes_long['voix'] = pd.to_numeric(votes_long['voix'], errors='coerce').fillna(0)
+
+        # ── 3. Agrégation par (dépt, liste) puis calcul des % ─────────────────────
+        votes_agg = (
+            votes_long
+            .groupby(['code_dept', 'abrege'], as_index=False)['voix']
+            .sum()
+            .merge(dept_info, on='code_dept')
+        )
+        votes_agg['pct'] = (votes_agg['voix'] / votes_agg['total_exprimes'] * 100).round(2)
+        votes_agg['bord'] = votes_agg['abrege'].map(BORD_MAP_2014)
+
+        # ── 4. % par bord par département ───────────────────────────────────────
+        bord_pct = (
+            votes_agg.dropna(subset=['bord'])
+            .groupby(['code_dept', 'bord'], as_index=False)['pct']
+            .sum()
+            .pivot(index='code_dept', columns='bord', values='pct')
+            .fillna(0)
+            .reset_index()
+        )
+        bord_pct.columns.name = None
+
+        # ── 5. Liste gagnante par département (max voix) ─────────────────────────
+        winner_idx = votes_agg.groupby('code_dept')['voix'].idxmax()
+        winner = votes_agg.loc[winner_idx, ['code_dept', 'libelle_dept', 'abrege', 'pct', 'bord']].copy()
+        winner.rename(columns={
+            'abrege': 'libelle_abrege_liste',
+            'pct':    'pct_voix_exprimes',
+            'bord':   'bord_liste_gagnante',
+        }, inplace=True)
+
+        # ── 6. Assemblage du résultat final ──────────────────────────────────────
+        final = winner.merge(bord_pct, on='code_dept', how='left')
+
+        for _, row in final.iterrows():
+            # Normaliser le code département au format gold ('01'..'95', '2A', '2B', '971'...)
+            raw_code = row['code_dept']
+            try:
+                dept_code = str(int(raw_code)).zfill(2)
+            except (ValueError, TypeError):
+                dept_code = str(raw_code)
+            results.append({
+                'code_departement':      dept_code,
+                'libelle_departement':   row['libelle_dept'],
+                'nuance_liste':          None,
+                'libelle_abrege_liste':  row['libelle_abrege_liste'],
+                'bord_liste_gagnante':   row.get('bord_liste_gagnante'),
+                'pct_voix_exprimes':     round(row['pct_voix_exprimes'], 2),
+                '% vote extreme gauche': round(row.get('EXTREME GAUCHE', 0.0), 2),
+                '% vote gauche':         round(row.get('GAUCHE', 0.0), 2),
+                '% vote centre':         round(row.get('CENTRE', 0.0), 2),
+                '% vote droite':         round(row.get('DROITE', 0.0), 2),
+                '% vote extreme droite': round(row.get('EXTREME DROITE', 0.0), 2),
+                'annee': year
+            })
+            print(f"   {row['code_dept']:3} - {row['libelle_dept']:30} -> {row['libelle_abrege_liste']} - {row['pct_voix_exprimes']:.2f}%")
+
     else:  # 2024
         col_code_dept = 'Code département'
         col_libelle_dept = 'Libellé département'
@@ -177,13 +353,13 @@ def process_elections_data(year=2024, input_file=None, output_file=None):
         for index, row in df.iterrows():
             code_dept = row[col_code_dept]
             libelle_dept = row[col_libelle_dept]
-            pct_exprimes_votants = _parse_percent(row['% Exprimés/votants']) or 0.0
             
             # Trouver la liste avec le plus haut % Voix/exprimés
             max_score = 0
             best_nuance = None
             best_libelle = None
-            sum_pct_droite = 0.0
+            best_bord = None
+            pct_par_bord = {}
             
             # Parcourir toutes les listes possibles (1 à 38)
             for i in range(1, 39):
@@ -194,6 +370,7 @@ def process_elections_data(year=2024, input_file=None, output_file=None):
                 if col_score in df.columns:
                     score_value = _parse_percent(row[col_score])
                     libelle_value = row[col_libelle]
+                    bord = MAPPING_BORDS_2024.get(i, None)
                     
                     # Vérifier si la valeur n'est pas NaN ou vide
                     if pd.notna(row[col_nuance]) and score_value is not None:
@@ -201,9 +378,10 @@ def process_elections_data(year=2024, input_file=None, output_file=None):
                             max_score = score_value
                             best_nuance = row[col_nuance]
                             best_libelle = libelle_value
+                            best_bord = bord
 
-                        if pd.notna(libelle_value) and str(libelle_value) in DROITE_PARTIES_2024:
-                            sum_pct_droite += score_value
+                        if bord:
+                            pct_par_bord[bord] = pct_par_bord.get(bord, 0.0) + score_value
             
             # Ajouter le résultat
             results.append({
@@ -211,26 +389,30 @@ def process_elections_data(year=2024, input_file=None, output_file=None):
                 'libelle_departement': libelle_dept,
                 'nuance_liste': best_nuance,
                 'libelle_abrege_liste': best_libelle,
+                'bord_liste_gagnante': best_bord,
                 'pct_voix_exprimes': max_score,
-                '% vote droite': round(sum_pct_droite, 2),
-                '% vote gauche': round(pct_exprimes_votants - sum_pct_droite, 2),
+                '% vote extreme gauche': round(pct_par_bord.get('EXTREME GAUCHE', 0.0), 2),
+                '% vote gauche': round(pct_par_bord.get('GAUCHE', 0.0), 2),
+                '% vote centre': round(pct_par_bord.get('CENTRE', 0.0), 2),
+                '% vote droite': round(pct_par_bord.get('DROITE', 0.0), 2),
+                '% vote extreme droite': round(pct_par_bord.get('EXTREME DROITE', 0.0), 2),
                 'annee': year
             })
             
-            print(f"   {code_dept:3} - {libelle_dept:30} → {best_nuance} ({best_libelle}) - {max_score:.2f}%")
+            print(f"   {code_dept:3} - {libelle_dept:30} -> {best_nuance} ({best_libelle}) - {max_score:.2f}%")
     
     # Créer le DataFrame final
     df_final = pd.DataFrame(results)
     
-    print(f"\n💾 Sauvegarde des résultats...")
+    print(f"\nSauvegarde des resultats...")
     df_final.to_csv(output_file, index=False, encoding='utf-8-sig')
     
-    print(f"\n✅ Traitement terminé!")
-    print(f"   → Fichier créé: {output_file}")
-    print(f"   → {len(df_final)} lignes sauvegardées")
-    print(f"   → Colonnes: {', '.join(df_final.columns)}")
+    print(f"\nTraitement termine!")
+    print(f"   -> Fichier cree: {output_file}")
+    print(f"   -> {len(df_final)} lignes sauvegardees")
+    print(f"   -> Colonnes: {', '.join(df_final.columns)}")
     
-    print("\n📊 Aperçu des résultats:")
+    print("\nApercu des resultats:")
     print(df_final.head(10).to_string(index=False))
     
     print("\n" + "=" * 70)
@@ -239,6 +421,7 @@ def process_elections_data(year=2024, input_file=None, output_file=None):
 
 
 if __name__ == "__main__":
-    # Traiter les deux années
+    # Traiter les trois années
     process_elections_data(year=2024)
     process_elections_data(year=2019)
+    process_elections_data(year=2014)

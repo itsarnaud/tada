@@ -55,6 +55,10 @@ RAW_FILES = {
         "crimes_delits_2014_raw.xlsx",
     "DATA 2014/DEMANDEUR EMPLOI/demandeur_emploi.csv":
         "demandeurs_emplois_2014_raw.csv",
+    "DATA 2014/POPULATION TRANCHE/population_tranche_age.xls":
+        "population_tranche_2014_raw.xls",
+    "DATA 2014/ELECTION/euro-2014-resultats-communes-c (1).xlsx":
+        "elections_2014_raw.xlsx",
 }
 
 

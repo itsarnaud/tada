@@ -17,6 +17,7 @@ from etl.silver.script_clean.process_logements import process_logements_data
 from etl.silver.script_clean.process_naissances import process_naissances_data, process_naissances_2014_data
 from etl.silver.script_clean.process_polices_municipaux import process_polices_municipaux_data, process_polices_municipaux_2014_data
 from etl.silver.script_clean.process_crimes import process_crimes, process_crimes_2014_data
+from etl.silver.script_clean.process_population_tranche_2014 import process_population_tranche_2014_data
 
 
 def process_all_datasets():
@@ -28,7 +29,7 @@ def process_all_datasets():
     datasets_processed = []
 
     # --- Elections ---
-    for year in [2024, 2019]:
+    for year in [2024, 2019, 2014]:
         try:
             print(f"\n[INFO] process_elections.py (annee {year})")
             df = process_elections_data(year=year)
@@ -160,6 +161,15 @@ def process_all_datasets():
             datasets_processed.append("crimes_delits_2014")
     except Exception as e:
         print(f"[ERREUR] crimes et delits 2014: {e}")
+
+    # --- Population tranche age 2014 ---
+    try:
+        print("\n[INFO] process_population_tranche_2014.py")
+        df = process_population_tranche_2014_data()
+        if df is not None:
+            datasets_processed.append("population_tranche_2014")
+    except Exception as e:
+        print(f"[ERREUR] population tranche age 2014: {e}")
 
     print("\n" + "=" * 70)
     print(f"Silver Layer termine - {len(datasets_processed)} dataset(s) traite(s)")
