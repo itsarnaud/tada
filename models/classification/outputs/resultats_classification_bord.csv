@@ -1,0 +1,2 @@
+task;validation_year;test_year;best_max_depth;val_accuracy;val_balanced_accuracy;val_f1_macro;test_accuracy;test_balanced_accuracy;test_f1_macro;baseline_majority_class;baseline_test_accuracy;baseline_test_balanced_accuracy;baseline_test_f1_macro
+multiclass_5_bords;2019;2024;8;0.65625;0.4846153846153846;0.16799999999999998;0.8514851485148515;0.2986111111111111;0.18594594594594596;EXTREME DROITE;0.9504950495049505;0.3333333333333333;0.1949238578680203
